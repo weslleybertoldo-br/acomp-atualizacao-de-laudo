@@ -365,13 +365,23 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
             ) : (comments ?? []).length === 0 ? (
               <p className="text-xs text-muted-foreground py-2">Nenhum comentário ainda.</p>
             ) : (
-              <div className="space-y-2 max-h-48 overflow-y-auto">
+              <div className="space-y-3 max-h-48 overflow-y-auto">
                 {(comments ?? []).map((c) => (
-                  <div key={c.id} className="rounded-lg bg-secondary p-2.5 text-sm space-y-1">
-                    <p>{c.content}</p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {format(new Date(c.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                    </p>
+                  <div key={c.id} className="rounded-lg bg-secondary p-3 text-sm space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                        {(c.user_name || c.user_email || "?").charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">
+                          {c.user_name || c.user_email || "Usuário"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {format(new Date(c.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-foreground/80 pl-9">{c.content}</p>
                   </div>
                 ))}
               </div>
