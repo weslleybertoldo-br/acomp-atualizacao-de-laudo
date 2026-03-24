@@ -93,9 +93,7 @@ export function KanbanBoard() {
               className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-56"
             />
           </div>
-          <button className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
-            <Filter className="h-4 w-4" />
-          </button>
+          <FilterPopover filters={filters} onChange={setFilters} phases={phases ?? []} />
           <button
             onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
             className={`p-2 rounded-lg transition-colors ${selectionMode ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-muted-foreground"}`}
