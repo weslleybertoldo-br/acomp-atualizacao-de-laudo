@@ -53,6 +53,16 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
+  const handleDelete = () => {
+    deleteCard.mutate(card.id, {
+      onSuccess: () => {
+        toast.success(`Card ${card.code} excluído!`);
+        onOpenChange(false);
+      },
+      onError: () => toast.error("Erro ao excluir card."),
+    });
+  };
+
   const handleAddComment = () => {
     if (!commentText.trim()) return;
     addComment.mutate(
