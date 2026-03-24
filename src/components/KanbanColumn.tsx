@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import type { KanbanPhase } from "@/data/kanbanData";
+import type { KanbanPhase, KanbanCard } from "@/data/kanbanData";
 import { KanbanCardItem } from "./KanbanCard";
 
 const phaseAccentClasses: Record<number, string> = {
@@ -10,7 +10,12 @@ const phaseAccentClasses: Record<number, string> = {
   4: "border-t-phase-4",
 };
 
-export function KanbanColumn({ phase }: { phase: KanbanPhase }) {
+interface KanbanColumnProps {
+  phase: KanbanPhase;
+  onCardClick: (card: KanbanCard) => void;
+}
+
+export function KanbanColumn({ phase, onCardClick }: KanbanColumnProps) {
   return (
     <div
       className={`flex flex-col min-w-[300px] max-w-[320px] rounded-xl bg-secondary/50 border border-border border-t-[3px] ${phaseAccentClasses[phase.id] ?? "border-t-primary"}`}
@@ -36,7 +41,7 @@ export function KanbanColumn({ phase }: { phase: KanbanPhase }) {
           </p>
         ) : (
           phase.cards.map((card) => (
-            <KanbanCardItem key={card.id} card={card} />
+            <KanbanCardItem key={card.id} card={card} onClick={() => onCardClick(card)} />
           ))
         )}
       </div>

@@ -13,9 +13,17 @@ const statusLabels: Record<KanbanCardType["status"], string> = {
   expired: "Expirado",
 };
 
-export function KanbanCardItem({ card }: { card: KanbanCardType }) {
+interface KanbanCardItemProps {
+  card: KanbanCardType;
+  onClick: () => void;
+}
+
+export function KanbanCardItem({ card, onClick }: KanbanCardItemProps) {
   return (
-    <div className="rounded-lg bg-card border border-border p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer space-y-2.5">
+    <div
+      onClick={onClick}
+      className="rounded-lg bg-card border border-border p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer space-y-2.5"
+    >
       {/* Header: status + tags */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <span
@@ -41,7 +49,7 @@ export function KanbanCardItem({ card }: { card: KanbanCardType }) {
         <span className="uppercase tracking-wide text-[10px] font-semibold text-muted-foreground/70">
           Responsável
         </span>
-        <p className="mt-0.5 font-medium text-foreground/80">{card.responsible}</p>
+        <p className="mt-0.5 font-medium text-foreground/80">{card.responsible || "—"}</p>
       </div>
 
       {/* Due date */}

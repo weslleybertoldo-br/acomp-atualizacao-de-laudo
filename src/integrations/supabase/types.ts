@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      card_comments: {
+        Row: {
+          card_id: string
+          content: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          card_id: string
+          content: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          card_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_comments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kanban_cards: {
         Row: {
           attachments: number
