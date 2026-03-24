@@ -269,7 +269,21 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="mt-0.5 h-8 text-xs justify-start w-full">
-                    <User className="h-3 w-3 mr-1.5" />
+                    {card.responsible ? (() => {
+                      const personData = (people ?? []).find(p => p.name === card.responsible);
+                      return personData?.avatar_url ? (
+                        <Avatar className="h-5 w-5 mr-1.5 shrink-0">
+                          <AvatarImage src={personData.avatar_url} alt={card.responsible} />
+                          <AvatarFallback className="text-[8px] font-bold bg-primary/20 text-primary">
+                            {card.responsible.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <User className="h-3 w-3 mr-1.5" />
+                      );
+                    })() : (
+                      <User className="h-3 w-3 mr-1.5" />
+                    )}
                     {card.responsible || "Selecionar..."}
                   </Button>
                 </PopoverTrigger>
