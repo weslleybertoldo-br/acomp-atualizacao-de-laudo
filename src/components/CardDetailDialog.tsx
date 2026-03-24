@@ -286,10 +286,18 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                               );
                             }}
                             className={cn(
-                              "flex-1 text-left text-xs px-2 py-1.5 rounded hover:bg-secondary",
+                              "flex-1 text-left text-xs px-2 py-1.5 rounded hover:bg-secondary flex items-center gap-2",
                               card.responsible === p.name && "bg-primary/10 font-semibold text-primary"
                             )}
                           >
+                            <Avatar className="h-5 w-5 shrink-0">
+                              {(p as any).avatar_url ? (
+                                <AvatarImage src={(p as any).avatar_url} alt={p.name} />
+                              ) : null}
+                              <AvatarFallback className="text-[8px] font-bold bg-primary/20 text-primary">
+                                {p.name.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
                             {p.name}
                           </button>
                           <button
