@@ -14,7 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      kanban_cards: {
+        Row: {
+          attachments: number
+          code: string
+          comments: number
+          created_at: string
+          due_date: string
+          due_label: string
+          id: string
+          phase_id: number
+          responsible: string
+          sort_order: number
+          status: string
+          status_label: string | null
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          attachments?: number
+          code: string
+          comments?: number
+          created_at?: string
+          due_date: string
+          due_label: string
+          id?: string
+          phase_id: number
+          responsible: string
+          sort_order?: number
+          status?: string
+          status_label?: string | null
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          attachments?: number
+          code?: string
+          comments?: number
+          created_at?: string
+          due_date?: string
+          due_label?: string
+          id?: string
+          phase_id?: number
+          responsible?: string
+          sort_order?: number
+          status?: string
+          status_label?: string | null
+          tags?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kanban_cards_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "kanban_phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kanban_phases: {
+        Row: {
+          created_at: string
+          id: number
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
