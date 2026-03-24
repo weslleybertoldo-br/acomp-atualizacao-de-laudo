@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, Tag, User, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { KanbanCard } from "@/data/kanbanData";
-import { useMoveCard, useDeleteCard, useUpdateCard, useCardComments, useAddComment, buildDueLabel } from "@/hooks/useKanbanData";
+import { useMoveCard, useDeleteCard, useUpdateCard, useCardComments, useAddComment, useResponsiblePeople, useAddResponsiblePerson, useDeleteResponsiblePerson, buildDueLabel } from "@/hooks/useKanbanData";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
