@@ -266,7 +266,26 @@ export function useAddComment() {
   });
 }
 
-export function useResponsiblePeople() {
+export function useDeleteComment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ commentId, cardId }: { commentId: string; cardId: string }) => {
+      const { error } = await supabase
+        .from("card_comments")
+        .delete()
+        .eq("id", commentId);
+      if (error) throw error;
+      return cardId;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["card-comments", variables.cardId] });
+      queryClient.invalidateQueries({ queryKey: ["kanban"] });
+    },
+  });
+}
+
+
   return useQuery({
     queryKey: ["responsible-people"],
     queryFn: async () => {
