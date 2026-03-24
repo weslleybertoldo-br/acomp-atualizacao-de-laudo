@@ -19,6 +19,39 @@ export function buildDueLabel(dateStr: string): string {
   return `Venc ${month}, ${day} · em ${dist}`;
 }
 
+export function buildSentLabel(dateStr: string): string {
+  const date = new Date(dateStr + "T00:00:00");
+  const dayMonth = format(date, "dd/MM", { locale: ptBR });
+
+  if (isToday(date)) return `Enviado dia ${dayMonth} · hoje`;
+  if (isPast(date)) {
+    const dist = formatDistanceToNow(date, { locale: ptBR });
+    return `Enviado dia ${dayMonth} · há ${dist}`;
+  }
+  const dist = formatDistanceToNow(date, { locale: ptBR });
+  return `Enviado dia ${dayMonth} · em ${dist}`;
+}
+
+/**
+ * Parse input like "16/2HFO1001" into { code: "HFO1001", date: "2026-02-16" }
+ * Also accepts plain codes like "LAU0050"
+ */
+export function parseCardInput(input: string): { code: string; date: string | null } {
+  const trimmed = input.trim();
+
+  // Match pattern: DD/M or DD/MM followed by letters (code start)
+  const match = trimmed.match(/^(\d{1,2})\/(\d{1,2})([A-Za-z].*)$/);
+  if (match) {
+    const day = match[1].padStart(2, "0");
+    const month = match[2].padStart(2, "0");
+    const year = new Date().getFullYear();
+    const code = match[3];
+    return { code, date: `${year}-${month}-${day}` };
+  }
+
+  return { code: trimmed, date: null };
+}
+
 /** Subscribe to realtime changes and auto-invalidate queries */
 export function useKanbanRealtime() {
   const queryClient = useQueryClient();
@@ -68,7 +101,6 @@ export function useKanbanData() {
 
       if (cardsError) throw cardsError;
 
-      // Get real comment counts
       const { data: commentCounts, error: ccError } = await supabase
         .from("card_comments")
         .select("card_id");
@@ -106,19 +138,22 @@ export function useCreateCards() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (codes: string[]) => {
-      const today = new Date().toISOString().split("T")[0];
-      const dueLabel = buildDueLabel(today);
+    mutationFn: async (inputs: string[]) => {
+      const rows = inputs.map((raw, i) => {
+        const { code, date } = parseCardInput(raw);
+        const dateStr = date || new Date().toISOString().split("T")[0];
+        const label = date ? buildSentLabel(dateStr) : buildDueLabel(dateStr);
 
-      const rows = codes.map((code, i) => ({
-        code: code.trim(),
-        phase_id: 0,
-        status: "on" as const,
-        responsible: "",
-        due_date: today,
-        due_label: dueLabel,
-        sort_order: i,
-      }));
+        return {
+          code,
+          phase_id: 0,
+          status: "on" as const,
+          responsible: "",
+          due_date: dateStr,
+          due_label: label,
+          sort_order: i,
+        };
+      });
 
       const { error } = await supabase.from("kanban_cards").insert(rows);
       if (error) throw error;
@@ -278,7 +313,6 @@ export function useDeleteResponsiblePerson() {
   });
 }
 
-// Kanban Tags (managed list with name + color)
 export function useKanbanTags() {
   return useQuery({
     queryKey: ["kanban-tags"],
