@@ -6,10 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, Tag, User, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { KanbanCard } from "@/data/kanbanData";
-import { useMoveCard, useDeleteCard, useUpdateCard, useCardComments, useAddComment, useResponsiblePeople, useAddResponsiblePerson, useDeleteResponsiblePerson, buildDueLabel } from "@/hooks/useKanbanData";
+import {
+  useMoveCard, useDeleteCard, useUpdateCard, useCardComments, useAddComment,
+  useResponsiblePeople, useAddResponsiblePerson, useDeleteResponsiblePerson,
+  useKanbanTags, useAddKanbanTag, useDeleteKanbanTag, buildDueLabel
+} from "@/hooks/useKanbanData";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -21,24 +26,16 @@ interface CardDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const statusColors: Record<KanbanCard["status"], string> = {
-  on: "bg-badge-on",
-  standby: "bg-badge-standby",
-  expired: "bg-badge-expired",
-};
-
-const statusLabels: Record<KanbanCard["status"], string> = {
-  on: "On",
-  standby: "Stand By",
-  expired: "Expirado",
-};
+const TAG_COLORS = [
+  "#3b82f6", "#ef4444", "#f59e0b", "#10b981", "#8b5cf6",
+  "#ec4899", "#06b6d4", "#f97316", "#6366f1", "#14b8a6",
+];
 
 export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChange }: CardDetailDialogProps) {
   const [commentText, setCommentText] = useState("");
-  const [newTag, setNewTag] = useState("");
-  const [editingLabel, setEditingLabel] = useState(false);
-  const [labelText, setLabelText] = useState("");
   const [newPersonName, setNewPersonName] = useState("");
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0]);
   const moveCard = useMoveCard();
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
@@ -46,6 +43,9 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   const { data: people } = useResponsiblePeople();
   const addPerson = useAddResponsiblePerson();
   const deletePerson = useDeleteResponsiblePerson();
+  const { data: tags } = useKanbanTags();
+  const addTag = useAddKanbanTag();
+  const deleteTag = useDeleteKanbanTag();
   const { data: comments, isLoading: loadingComments } = useCardComments(card?.id ?? "");
 
   if (!card) return null;
@@ -93,19 +93,17 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
-  const handleAddTag = () => {
-    const tag = newTag.trim();
-    if (!tag || card.tags.includes(tag)) return;
+  const handleSelectTag = (tagName: string) => {
     updateCard.mutate(
-      { cardId: card.id, updates: { tags: [...card.tags, tag] } },
-      { onSuccess: () => { setNewTag(""); toast.success("Tag adicionada!"); }, onError: () => toast.error("Erro ao adicionar tag.") }
+      { cardId: card.id, updates: { status_label: tagName } },
+      { onSuccess: () => toast.success("Tag atualizada!") }
     );
   };
 
-  const handleRemoveTag = (tagToRemove: string) => {
+  const handleRemoveStatusLabel = () => {
     updateCard.mutate(
-      { cardId: card.id, updates: { tags: card.tags.filter((t) => t !== tagToRemove) } },
-      { onSuccess: () => toast.success("Tag removida!"), onError: () => toast.error("Erro ao remover tag.") }
+      { cardId: card.id, updates: { status_label: null } },
+      { onSuccess: () => toast.success("Tag removida!") }
     );
   };
 
@@ -120,70 +118,114 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
+  const currentTag = (tags ?? []).find(t => t.name === card.statusLabel);
+
   return (
     <Dialog open={!!card} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             <span className="text-lg">{card.code}</span>
-            {editingLabel ? (
-              <div className="flex items-center gap-1">
-                <Input
-                  value={labelText}
-                  onChange={(e) => setLabelText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      updateCard.mutate(
-                        { cardId: card.id, updates: { status_label: labelText.trim() || null } },
-                        { onSuccess: () => { setEditingLabel(false); toast.success("Tag atualizada!"); } }
-                      );
-                    } else if (e.key === "Escape") setEditingLabel(false);
-                  }}
-                  className="h-6 text-[10px] w-28"
-                  autoFocus
-                  placeholder="Ex: Aguardando"
-                />
-                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => {
-                  updateCard.mutate(
-                    { cardId: card.id, updates: { status_label: labelText.trim() || null } },
-                    { onSuccess: () => { setEditingLabel(false); toast.success("Tag atualizada!"); } }
-                  );
-                }}>
-                  <Send className="h-3 w-3" />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1">
-                {card.statusLabel && (
-                  <span
-                    className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-primary-foreground ${statusColors[card.status]}`}
-                  >
-                    {card.statusLabel}
-                  </span>
-                )}
-                <button
-                  onClick={() => { setLabelText(card.statusLabel || ""); setEditingLabel(true); }}
-                  className="text-muted-foreground hover:text-foreground"
-                  title={card.statusLabel ? "Editar tag" : "Adicionar tag"}
-                >
-                  {card.statusLabel ? <Pencil className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+            {/* Tag next to code */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-1 cursor-pointer hover:opacity-80">
+                  {card.statusLabel ? (
+                    <span
+                      className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-white"
+                      style={{ backgroundColor: currentTag?.color || "#3b82f6" }}
+                    >
+                      {card.statusLabel}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground hover:text-foreground">
+                      <Plus className="h-3 w-3" />
+                    </span>
+                  )}
                 </button>
-                {card.statusLabel && (
-                  <button
-                    onClick={() => {
-                      updateCard.mutate(
-                        { cardId: card.id, updates: { status_label: null } },
-                        { onSuccess: () => toast.success("Tag removida!") }
-                      );
-                    }}
-                    className="text-muted-foreground hover:text-destructive"
-                    title="Remover tag"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-            )}
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-2 pointer-events-auto" align="start">
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground px-1">Selecionar Tag</p>
+                  {/* Add new tag */}
+                  <div className="space-y-1.5">
+                    <div className="flex gap-1">
+                      <Input
+                        placeholder="Nova tag..."
+                        value={newTagName}
+                        onChange={(e) => setNewTagName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newTagName.trim()) {
+                            addTag.mutate({ name: newTagName.trim(), color: newTagColor }, {
+                              onSuccess: () => { setNewTagName(""); toast.success("Tag criada!"); },
+                              onError: () => toast.error("Erro ou tag já existe."),
+                            });
+                          }
+                        }}
+                        className="h-7 text-xs"
+                      />
+                      <Button size="icon" variant="outline" className="h-7 w-7 shrink-0" onClick={() => {
+                        if (newTagName.trim()) {
+                          addTag.mutate({ name: newTagName.trim(), color: newTagColor }, {
+                            onSuccess: () => { setNewTagName(""); toast.success("Tag criada!"); },
+                            onError: () => toast.error("Erro ou tag já existe."),
+                          });
+                        }
+                      }}>
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="flex gap-1 flex-wrap px-1">
+                      {TAG_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setNewTagColor(c)}
+                          className={cn(
+                            "h-5 w-5 rounded-full border-2 transition-all",
+                            newTagColor === c ? "border-foreground scale-110" : "border-transparent"
+                          )}
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <Separator />
+                  {card.statusLabel && (
+                    <button
+                      onClick={handleRemoveStatusLabel}
+                      className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-destructive/10 text-destructive flex items-center gap-1.5"
+                    >
+                      <X className="h-3 w-3" /> Remover tag
+                    </button>
+                  )}
+                  <div className="max-h-40 overflow-y-auto space-y-0.5">
+                    {(tags ?? []).map((t) => (
+                      <div key={t.id} className="flex items-center justify-between group">
+                        <button
+                          onClick={() => handleSelectTag(t.name)}
+                          className={cn(
+                            "flex-1 text-left text-xs px-2 py-1.5 rounded hover:bg-secondary flex items-center gap-2",
+                            card.statusLabel === t.name && "font-semibold"
+                          )}
+                        >
+                          <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
+                          {t.name}
+                        </button>
+                        <button
+                          onClick={() => deleteTag.mutate(t.id, { onSuccess: () => toast.success("Tag removida da lista!") })}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {(tags ?? []).length === 0 && (
+                      <p className="text-[10px] text-muted-foreground px-2 py-1">Nenhuma tag cadastrada.</p>
+                    )}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </DialogTitle>
         </DialogHeader>
 
@@ -307,40 +349,6 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
             </div>
           </div>
 
-          {/* Tags */}
-          <Separator />
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold flex items-center gap-1.5 text-muted-foreground uppercase tracking-wide">
-              <Tag className="h-3 w-3" />
-              Tags
-            </h4>
-            <div className="flex gap-1.5 flex-wrap">
-              {card.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1"
-                >
-                  {tag}
-                  <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive">
-                    <X className="h-2.5 w-2.5" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-1.5">
-              <Input
-                placeholder="Nova tag..."
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
-                className="h-8 text-xs"
-              />
-              <Button size="sm" variant="outline" onClick={handleAddTag} disabled={!newTag.trim()}>
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-          </div>
-
           {/* Move to next phase */}
           {canMoveNext && (
             <>
@@ -396,9 +404,14 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                 {(comments ?? []).map((c) => (
                   <div key={c.id} className="rounded-lg bg-secondary p-3 text-sm space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
-                        {(c.user_name || c.user_email || "?").charAt(0).toUpperCase()}
-                      </div>
+                      <Avatar className="h-7 w-7 shrink-0">
+                        {(c as any).user_avatar ? (
+                          <AvatarImage src={(c as any).user_avatar} alt={c.user_name || "avatar"} />
+                        ) : null}
+                        <AvatarFallback className="text-[10px] font-bold bg-primary/20 text-primary">
+                          {(c.user_name || c.user_email || "?").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="min-w-0">
                         <p className="text-xs font-semibold text-foreground truncate">
                           {c.user_name || c.user_email || "Usuário"}

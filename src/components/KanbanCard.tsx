@@ -1,17 +1,6 @@
 import { MessageSquare, Paperclip, Calendar } from "lucide-react";
 import type { KanbanCard as KanbanCardType } from "@/data/kanbanData";
-
-const statusColors: Record<KanbanCardType["status"], string> = {
-  on: "bg-badge-on",
-  standby: "bg-badge-standby",
-  expired: "bg-badge-expired",
-};
-
-const statusLabels: Record<KanbanCardType["status"], string> = {
-  on: "On",
-  standby: "Stand By",
-  expired: "Expirado",
-};
+import { useKanbanTags } from "@/hooks/useKanbanData";
 
 interface KanbanCardItemProps {
   card: KanbanCardType;
@@ -19,30 +8,26 @@ interface KanbanCardItemProps {
 }
 
 export function KanbanCardItem({ card, onClick }: KanbanCardItemProps) {
+  const { data: tags } = useKanbanTags();
+  const currentTag = (tags ?? []).find(t => t.name === card.statusLabel);
+
   return (
     <div
       onClick={onClick}
       className="rounded-lg bg-card border border-border p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer space-y-2.5"
     >
-      {/* Header: status + tags */}
+      {/* Header: code + tag */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        <span
-          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-primary-foreground ${statusColors[card.status]}`}
-        >
-          {card.statusLabel || statusLabels[card.status]}
-        </span>
-        {card.tags.map((tag) => (
+        <p className="text-sm font-bold text-foreground">{card.code}</p>
+        {card.statusLabel && (
           <span
-            key={tag}
-            className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary"
+            className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-white"
+            style={{ backgroundColor: currentTag?.color || "#3b82f6" }}
           >
-            {tag}
+            {card.statusLabel}
           </span>
-        ))}
+        )}
       </div>
-
-      {/* Code */}
-      <p className="text-sm font-bold text-foreground">{card.code}</p>
 
       {/* Responsible */}
       <div className="text-xs text-muted-foreground">

@@ -20,6 +20,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          user_avatar: string | null
           user_email: string | null
           user_id: string | null
           user_name: string | null
@@ -29,6 +30,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          user_avatar?: string | null
           user_email?: string | null
           user_id?: string | null
           user_name?: string | null
@@ -38,6 +40,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          user_avatar?: string | null
           user_email?: string | null
           user_id?: string | null
           user_name?: string | null
@@ -129,6 +132,27 @@ export type Database = {
           id?: number
           sort_order?: number
           title?: string
+        }
+        Relationships: []
+      }
+      kanban_tags: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
