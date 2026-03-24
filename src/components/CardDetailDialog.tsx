@@ -130,6 +130,18 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
             </>
           )}
 
+          {/* Delete card */}
+          <Separator />
+          <Button
+            onClick={handleDelete}
+            disabled={deleteCard.isPending}
+            className="w-full"
+            variant="destructive"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Excluir card
+          </Button>
+
           {/* Comments section */}
           <Separator />
           <div className="space-y-3">
