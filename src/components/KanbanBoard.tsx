@@ -83,6 +83,8 @@ export function KanbanBoard() {
             <input
               type="text"
               placeholder="Procurar cards"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-56"
             />
           </div>
