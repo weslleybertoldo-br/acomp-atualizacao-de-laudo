@@ -29,8 +29,15 @@ export function KanbanBoard() {
     return null;
   })();
 
+  const filteredPhases = (phases ?? []).map(phase => ({
+    ...phase,
+    cards: phase.cards.filter(card =>
+      !searchTerm || card.code.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+  }));
+
   const totalPhases = phases?.length ?? 0;
-  const allCardIds = (phases ?? []).flatMap(p => p.cards.map(c => c.id));
+  const allCardIds = filteredPhases.flatMap(p => p.cards.map(c => c.id));
 
   const toggleCard = (id: string) => {
     setSelectedCardIds(prev => {
