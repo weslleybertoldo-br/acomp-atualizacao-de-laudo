@@ -82,7 +82,7 @@ export function KanbanBoard() {
               <KanbanColumn
                 key={phase.id}
                 phase={phase}
-                onCardClick={(card) => setSelectedCard({ card, phaseId: phase.id })}
+                onCardClick={(card) => setSelectedCardInfo({ cardId: card.id, phaseId: phase.id })}
               />
             ))}
           </div>
