@@ -128,7 +128,7 @@ export function useUpdateCard() {
       updates,
     }: {
       cardId: string;
-      updates: { due_date?: string | null; due_label?: string | null; tags?: string[] };
+      updates: { due_date?: string | null; due_label?: string | null; tags?: string[]; responsible?: string };
     }) => {
       const { error } = await supabase
         .from("kanban_cards")
