@@ -1,9 +1,17 @@
+import { useState } from "react";
 import { useKanbanData } from "@/hooks/useKanbanData";
 import { KanbanColumn } from "./KanbanColumn";
+import { CreateCardDialog } from "./CreateCardDialog";
+import { CardDetailDialog } from "./CardDetailDialog";
 import { Search, Filter, Plus, Loader2 } from "lucide-react";
+import type { KanbanCard } from "@/data/kanbanData";
 
 export function KanbanBoard() {
   const { data: phases, isLoading, error } = useKanbanData();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<{ card: KanbanCard; phaseId: number } | null>(null);
+
+  const totalPhases = phases?.length ?? 0;
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -55,17 +63,33 @@ export function KanbanBoard() {
         ) : (
           <div className="flex gap-4 p-4 min-h-0 h-full">
             {(phases ?? []).map((phase) => (
-              <KanbanColumn key={phase.id} phase={phase} />
+              <KanbanColumn
+                key={phase.id}
+                phase={phase}
+                onCardClick={(card) => setSelectedCard({ card, phaseId: phase.id })}
+              />
             ))}
           </div>
         )}
       </div>
 
       {/* FAB */}
-      <button className="fixed bottom-6 left-6 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg hover:opacity-90 transition-opacity text-sm font-semibold">
+      <button
+        onClick={() => setCreateOpen(true)}
+        className="fixed bottom-6 left-6 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg hover:opacity-90 transition-opacity text-sm font-semibold"
+      >
         <Plus className="h-4 w-4" />
         Criar novo card
       </button>
+
+      <CreateCardDialog open={createOpen} onOpenChange={setCreateOpen} />
+
+      <CardDetailDialog
+        card={selectedCard?.card ?? null}
+        currentPhaseId={selectedCard?.phaseId ?? 0}
+        totalPhases={totalPhases}
+        onOpenChange={(open) => { if (!open) setSelectedCard(null); }}
+      />
     </div>
   );
 }
