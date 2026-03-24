@@ -4,7 +4,7 @@ import type { KanbanCard, KanbanPhase } from "@/data/kanbanData";
 import { format, formatDistanceToNow, isPast, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-function buildDueLabel(dateStr: string): string {
+export function buildDueLabel(dateStr: string): string {
   const date = new Date(dateStr + "T00:00:00");
   const day = format(date, "dd", { locale: ptBR });
   const month = format(date, "MMM", { locale: ptBR });
@@ -48,7 +48,7 @@ export function useKanbanData() {
             statusLabel: c.status_label ?? undefined,
             responsible: c.responsible,
             dueDate: c.due_date,
-            dueLabel: c.due_label,
+            dueLabel: c.due_label ?? "",
             comments: c.comments,
             attachments: c.attachments,
             tags: c.tags ?? [],
@@ -110,6 +110,29 @@ export function useMoveCard() {
       const { error } = await supabase
         .from("kanban_cards")
         .update({ phase_id: newPhaseId })
+        .eq("id", cardId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kanban"] });
+    },
+  });
+}
+
+export function useUpdateCard() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      cardId,
+      updates,
+    }: {
+      cardId: string;
+      updates: { due_date?: string | null; due_label?: string | null; tags?: string[] };
+    }) => {
+      const { error } = await supabase
+        .from("kanban_cards")
+        .update(updates)
         .eq("id", cardId);
       if (error) throw error;
     },
