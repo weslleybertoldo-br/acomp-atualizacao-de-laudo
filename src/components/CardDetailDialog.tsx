@@ -3,9 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, MessageSquare, Send, Loader2 } from "lucide-react";
+import { ArrowRight, MessageSquare, Send, Loader2, Trash2 } from "lucide-react";
 import type { KanbanCard } from "@/data/kanbanData";
-import { useMoveCard, useCardComments, useAddComment } from "@/hooks/useKanbanData";
+import { useMoveCard, useDeleteCard, useCardComments, useAddComment } from "@/hooks/useKanbanData";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

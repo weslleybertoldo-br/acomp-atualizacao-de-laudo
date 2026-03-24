@@ -85,6 +85,23 @@ export function useCreateCards() {
   });
 }
 
+export function useDeleteCard() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (cardId: string) => {
+      const { error } = await supabase
+        .from("kanban_cards")
+        .delete()
+        .eq("id", cardId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kanban"] });
+    },
+  });
+}
+
 export function useMoveCard() {
   const queryClient = useQueryClient();
 
