@@ -42,6 +42,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
   const addComment = useAddComment();
+  const deleteComment = useDeleteComment();
   const { data: people } = useResponsiblePeople();
   const addPerson = useAddResponsiblePerson();
   const deletePerson = useDeleteResponsiblePerson();
