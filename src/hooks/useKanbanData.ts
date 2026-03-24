@@ -62,6 +62,18 @@ export function useKanbanData() {
 
       if (cardsError) throw cardsError;
 
+      // Get real comment counts
+      const { data: commentCounts, error: ccError } = await supabase
+        .from("card_comments")
+        .select("card_id");
+      
+      const countMap: Record<string, number> = {};
+      if (!ccError && commentCounts) {
+        for (const c of commentCounts) {
+          countMap[c.card_id] = (countMap[c.card_id] || 0) + 1;
+        }
+      }
+
       return (phases ?? []).map((phase) => ({
         id: phase.id,
         title: phase.title,
@@ -75,7 +87,7 @@ export function useKanbanData() {
             responsible: c.responsible,
             dueDate: c.due_date,
             dueLabel: c.due_label ?? "",
-            comments: c.comments,
+            comments: countMap[c.id] || 0,
             attachments: c.attachments,
             tags: c.tags ?? [],
           })),
