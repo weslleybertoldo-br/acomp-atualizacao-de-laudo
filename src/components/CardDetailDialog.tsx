@@ -167,10 +167,17 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
               return (
                 <span
                   key={tagName}
-                  className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-white"
+                  className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-white inline-flex items-center gap-1 group/tag cursor-default"
                   style={{ backgroundColor: tagData?.color || "#3b82f6" }}
                 >
                   {tagName}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleTag(tagName); }}
+                    className="opacity-0 group-hover/tag:opacity-100 hover:text-red-200 transition-opacity"
+                    title="Remover tag do card"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
                 </span>
               );
             })}
