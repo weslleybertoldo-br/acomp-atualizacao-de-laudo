@@ -13,9 +13,12 @@ const phaseAccentClasses: Record<number, string> = {
 interface KanbanColumnProps {
   phase: KanbanPhase;
   onCardClick: (card: KanbanCard) => void;
+  selectionMode?: boolean;
+  selectedCardIds?: Set<string>;
+  onToggleCard?: (id: string) => void;
 }
 
-export function KanbanColumn({ phase, onCardClick }: KanbanColumnProps) {
+export function KanbanColumn({ phase, onCardClick, selectionMode, selectedCardIds, onToggleCard }: KanbanColumnProps) {
   return (
     <div
       className={`flex flex-col min-w-[300px] max-w-[320px] rounded-xl bg-secondary/50 border border-border border-t-[3px] ${phaseAccentClasses[phase.id] ?? "border-t-primary"}`}
@@ -41,7 +44,14 @@ export function KanbanColumn({ phase, onCardClick }: KanbanColumnProps) {
           </p>
         ) : (
           phase.cards.map((card) => (
-            <KanbanCardItem key={card.id} card={card} onClick={() => onCardClick(card)} />
+            <KanbanCardItem
+              key={card.id}
+              card={card}
+              onClick={() => selectionMode ? onToggleCard?.(card.id) : onCardClick(card)}
+              selectionMode={selectionMode}
+              isSelected={selectedCardIds?.has(card.id)}
+              onToggle={() => onToggleCard?.(card.id)}
+            />
           ))
         )}
       </div>

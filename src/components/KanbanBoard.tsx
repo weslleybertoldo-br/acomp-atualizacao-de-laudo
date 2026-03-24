@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useKanbanData, useKanbanRealtime } from "@/hooks/useKanbanData";
+import { useKanbanData, useKanbanRealtime, useBulkDeleteCards } from "@/hooks/useKanbanData";
 import { useAuth } from "@/hooks/useAuth";
 import { KanbanColumn } from "./KanbanColumn";
 import { CreateCardDialog } from "./CreateCardDialog";
 import { CardDetailDialog } from "./CardDetailDialog";
-import { Search, Filter, Plus, Loader2, LogOut } from "lucide-react";
+import { Search, Filter, Plus, Loader2, LogOut, Trash2, CheckSquare, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import type { KanbanCard } from "@/data/kanbanData";
 
 export function KanbanBoard() {
@@ -13,8 +15,10 @@ export function KanbanBoard() {
   const { data: phases, isLoading, error } = useKanbanData();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedCardInfo, setSelectedCardInfo] = useState<{ cardId: string; phaseId: number } | null>(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedCardIds, setSelectedCardIds] = useState<Set<string>>(new Set());
+  const bulkDelete = useBulkDeleteCards();
 
-  // Derive live card data from query instead of stale state
   const selectedCard = (() => {
     if (!selectedCardInfo || !phases) return null;
     for (const phase of phases) {
@@ -25,6 +29,36 @@ export function KanbanBoard() {
   })();
 
   const totalPhases = phases?.length ?? 0;
+  const allCardIds = (phases ?? []).flatMap(p => p.cards.map(c => c.id));
+
+  const toggleCard = (id: string) => {
+    setSelectedCardIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => setSelectedCardIds(new Set(allCardIds));
+  const deselectAll = () => setSelectedCardIds(new Set());
+
+  const handleBulkDelete = () => {
+    if (selectedCardIds.size === 0) return;
+    bulkDelete.mutate([...selectedCardIds], {
+      onSuccess: () => {
+        toast.success(`${selectedCardIds.size} card(s) excluído(s)!`);
+        setSelectedCardIds(new Set());
+        setSelectionMode(false);
+      },
+      onError: () => toast.error("Erro ao excluir cards."),
+    });
+  };
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedCardIds(new Set());
+  };
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -47,11 +81,46 @@ export function KanbanBoard() {
           <button className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
             <Filter className="h-4 w-4" />
           </button>
+          <button
+            onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
+            className={`p-2 rounded-lg transition-colors ${selectionMode ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-muted-foreground"}`}
+            title={selectionMode ? "Sair da seleção" : "Selecionar cards"}
+          >
+            <CheckSquare className="h-4 w-4" />
+          </button>
           <button onClick={signOut} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors" title="Sair">
             <LogOut className="h-4 w-4" />
           </button>
         </div>
       </header>
+
+      {/* Selection bar */}
+      {selectionMode && (
+        <div className="flex items-center justify-between px-6 py-2 border-b border-border bg-primary/5 text-sm">
+          <div className="flex items-center gap-3">
+            <span className="font-medium text-foreground">{selectedCardIds.size} selecionado(s)</span>
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={selectedCardIds.size === allCardIds.length ? deselectAll : selectAll}>
+              {selectedCardIds.size === allCardIds.length ? "Desmarcar todos" : "Selecionar todos"}
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleBulkDelete}
+              disabled={selectedCardIds.size === 0 || bulkDelete.isPending}
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              Excluir ({selectedCardIds.size})
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={exitSelectionMode}>
+              <X className="h-3 w-3 mr-1" />
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <nav className="flex items-center gap-6 px-6 py-2 border-b border-border bg-card text-sm">
@@ -82,7 +151,14 @@ export function KanbanBoard() {
               <KanbanColumn
                 key={phase.id}
                 phase={phase}
-                onCardClick={(card) => setSelectedCardInfo({ cardId: card.id, phaseId: phase.id })}
+                selectionMode={selectionMode}
+                selectedCardIds={selectedCardIds}
+                onToggleCard={toggleCard}
+                onCardClick={(card) => {
+                  if (!selectionMode) {
+                    setSelectedCardInfo({ cardId: card.id, phaseId: phase.id });
+                  }
+                }}
               />
             ))}
           </div>
@@ -90,13 +166,15 @@ export function KanbanBoard() {
       </div>
 
       {/* FAB */}
-      <button
-        onClick={() => setCreateOpen(true)}
-        className="fixed bottom-6 left-6 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg hover:opacity-90 transition-opacity text-sm font-semibold"
-      >
-        <Plus className="h-4 w-4" />
-        Criar novo card
-      </button>
+      {!selectionMode && (
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="fixed bottom-6 left-6 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg hover:opacity-90 transition-opacity text-sm font-semibold"
+        >
+          <Plus className="h-4 w-4" />
+          Criar novo card
+        </button>
+      )}
 
       <CreateCardDialog open={createOpen} onOpenChange={setCreateOpen} />
 
