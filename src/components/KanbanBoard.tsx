@@ -36,6 +36,9 @@ export function KanbanBoard() {
           <button className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
             <Filter className="h-4 w-4" />
           </button>
+          <button onClick={signOut} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors" title="Sair">
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </header>
 
