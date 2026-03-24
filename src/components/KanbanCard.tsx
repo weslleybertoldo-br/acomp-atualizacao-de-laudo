@@ -1,22 +1,38 @@
 import { MessageSquare, Paperclip, Calendar } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { KanbanCard as KanbanCardType } from "@/data/kanbanData";
 import { useKanbanTags } from "@/hooks/useKanbanData";
+import { cn } from "@/lib/utils";
 
 interface KanbanCardItemProps {
   card: KanbanCardType;
   onClick: () => void;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onToggle?: () => void;
 }
 
-export function KanbanCardItem({ card, onClick }: KanbanCardItemProps) {
+export function KanbanCardItem({ card, onClick, selectionMode, isSelected, onToggle }: KanbanCardItemProps) {
   const { data: allTags } = useKanbanTags();
 
   return (
     <div
       onClick={onClick}
-      className="rounded-lg bg-card border border-border p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer space-y-2.5"
+      className={cn(
+        "rounded-lg bg-card border border-border p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer space-y-2.5",
+        selectionMode && isSelected && "ring-2 ring-primary border-primary bg-primary/5"
+      )}
     >
-      {/* Header: code + tags */}
+      {/* Header: checkbox + code + tags */}
       <div className="flex items-center gap-1.5 flex-wrap">
+        {selectionMode && (
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onToggle?.()}
+            onClick={(e) => e.stopPropagation()}
+            className="mr-1"
+          />
+        )}
         <p className="text-sm font-bold text-foreground">{card.code}</p>
         {(card.tags ?? []).map((tagName) => {
           const tagData = (allTags ?? []).find(t => t.name === tagName);

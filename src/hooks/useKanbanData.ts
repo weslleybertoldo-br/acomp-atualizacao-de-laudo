@@ -39,13 +39,13 @@ export function buildSentLabel(dateStr: string): string {
 export function parseCardInput(input: string): { code: string; date: string | null } {
   const trimmed = input.trim();
 
-  // Match pattern: DD/M or DD/MM followed by letters (code start)
-  const match = trimmed.match(/^(\d{1,2})\/(\d{1,2})([A-Za-z].*)$/);
+  // Match pattern: DD/M or DD/MM optionally followed by space, then letters (code start)
+  const match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\s*([A-Za-z].*)$/);
   if (match) {
     const day = match[1].padStart(2, "0");
     const month = match[2].padStart(2, "0");
     const year = new Date().getFullYear();
-    const code = match[3];
+    const code = match[3].trim();
     return { code, date: `${year}-${month}-${day}` };
   }
 
@@ -173,6 +173,23 @@ export function useDeleteCard() {
         .from("kanban_cards")
         .delete()
         .eq("id", cardId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kanban"] });
+    },
+  });
+}
+
+export function useBulkDeleteCards() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (cardIds: string[]) => {
+      const { error } = await supabase
+        .from("kanban_cards")
+        .delete()
+        .in("id", cardIds);
       if (error) throw error;
     },
     onSuccess: () => {
