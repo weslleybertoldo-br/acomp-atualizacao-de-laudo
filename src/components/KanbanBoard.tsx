@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useKanbanData, useKanbanRealtime, useBulkDeleteCards } from "@/hooks/useKanbanData";
 import { useAuth } from "@/hooks/useAuth";
 import { KanbanColumn } from "./KanbanColumn";
+import { KanbanListView } from "./KanbanListView";
 import { CreateCardDialog } from "./CreateCardDialog";
 import { CardDetailDialog } from "./CardDetailDialog";
 import { Search, Filter, Plus, Loader2, LogOut, Trash2, CheckSquare, X } from "lucide-react";
