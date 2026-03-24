@@ -36,6 +36,12 @@ export function useKanbanRealtime() {
         }
         queryClient.invalidateQueries({ queryKey: ["kanban"] });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "responsible_people" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["responsible-people"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "kanban_tags" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["kanban-tags"] });
+      })
       .subscribe();
 
     return () => {
@@ -205,6 +211,7 @@ export function useAddComment() {
       const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || null;
       const userEmail = user?.email || null;
       const userId = user?.id || null;
+      const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || null;
 
       const { error } = await supabase
         .from("card_comments")
@@ -214,6 +221,7 @@ export function useAddComment() {
           user_id: userId,
           user_name: userName,
           user_email: userEmail,
+          user_avatar: userAvatar,
         });
       if (error) throw error;
     },
@@ -266,6 +274,54 @@ export function useDeleteResponsiblePerson() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["responsible-people"] });
+    },
+  });
+}
+
+// Kanban Tags (managed list with name + color)
+export function useKanbanTags() {
+  return useQuery({
+    queryKey: ["kanban-tags"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("kanban_tags")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useAddKanbanTag() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ name, color }: { name: string; color: string }) => {
+      const { error } = await supabase
+        .from("kanban_tags")
+        .insert({ name: name.trim(), color });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kanban-tags"] });
+    },
+  });
+}
+
+export function useDeleteKanbanTag() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("kanban_tags")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kanban-tags"] });
     },
   });
 }
