@@ -1,8 +1,10 @@
-import { kanbanPhases } from "@/data/kanbanData";
+import { useKanbanData } from "@/hooks/useKanbanData";
 import { KanbanColumn } from "./KanbanColumn";
-import { Search, Filter, Plus } from "lucide-react";
+import { Search, Filter, Plus, Loader2 } from "lucide-react";
 
 export function KanbanBoard() {
+  const { data: phases, isLoading, error } = useKanbanData();
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Top bar */}
@@ -42,11 +44,21 @@ export function KanbanBoard() {
 
       {/* Board */}
       <div className="flex-1 overflow-x-auto">
-        <div className="flex gap-4 p-4 min-h-0 h-full">
-          {kanbanPhases.map((phase) => (
-            <KanbanColumn key={phase.id} phase={phase} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full text-destructive">
+            Erro ao carregar dados.
+          </div>
+        ) : (
+          <div className="flex gap-4 p-4 min-h-0 h-full">
+            {(phases ?? []).map((phase) => (
+              <KanbanColumn key={phase.id} phase={phase} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* FAB */}
