@@ -136,15 +136,18 @@ export function KanbanBoard() {
 
       {/* Tabs */}
       <nav className="flex items-center gap-6 px-6 py-2 border-b border-border bg-card text-sm">
-        <button className="font-semibold text-primary border-b-2 border-primary pb-1">
-          Kanban
-        </button>
-        <button className="text-muted-foreground hover:text-foreground transition-colors pb-1">
-          Lista
-        </button>
-        <button className="text-muted-foreground hover:text-foreground transition-colors pb-1">
-          Relatórios
-        </button>
+        {(["kanban", "lista", "relatorios"] as const).map((tab) => {
+          const labels = { kanban: "Kanban", lista: "Lista", relatorios: "Relatórios" };
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`pb-1 transition-colors ${activeTab === tab ? "font-semibold text-primary border-b-2 border-primary" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {labels[tab]}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Board */}
