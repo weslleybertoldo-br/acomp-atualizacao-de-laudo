@@ -5,7 +5,8 @@ import { KanbanColumn } from "./KanbanColumn";
 import { KanbanListView } from "./KanbanListView";
 import { CreateCardDialog } from "./CreateCardDialog";
 import { CardDetailDialog } from "./CardDetailDialog";
-import { Search, Filter, Plus, Loader2, LogOut, Trash2, CheckSquare, X } from "lucide-react";
+import { FilterPopover, type KanbanFilters, emptyFilters, applyFilters } from "./FilterPopover";
+import { Search, Plus, Loader2, LogOut, Trash2, CheckSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { KanbanCard } from "@/data/kanbanData";
@@ -17,6 +18,7 @@ export function KanbanBoard() {
   const [createOpen, setCreateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"kanban" | "lista" | "relatorios">("kanban");
+  const [filters, setFilters] = useState<KanbanFilters>(emptyFilters);
   const [selectedCardInfo, setSelectedCardInfo] = useState<{ cardId: string; phaseId: number } | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedCardIds, setSelectedCardIds] = useState<Set<string>>(new Set());
@@ -31,12 +33,13 @@ export function KanbanBoard() {
     return null;
   })();
 
-  const filteredPhases = (phases ?? []).map(phase => ({
+  const searchFiltered = (phases ?? []).map(phase => ({
     ...phase,
     cards: phase.cards.filter(card =>
       !searchTerm || card.code.toLowerCase().includes(searchTerm.toLowerCase())
     ),
   }));
+  const filteredPhases = applyFilters(searchFiltered, filters);
 
   const totalPhases = phases?.length ?? 0;
   const allCardIds = filteredPhases.flatMap(p => p.cards.map(c => c.id));
@@ -90,9 +93,7 @@ export function KanbanBoard() {
               className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-56"
             />
           </div>
-          <button className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
-            <Filter className="h-4 w-4" />
-          </button>
+          <FilterPopover filters={filters} onChange={setFilters} phases={phases ?? []} />
           <button
             onClick={() => selectionMode ? exitSelectionMode() : setSelectionMode(true)}
             className={`p-2 rounded-lg transition-colors ${selectionMode ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-muted-foreground"}`}
