@@ -104,7 +104,7 @@ export function KanbanBoard() {
         card={selectedCard?.card ?? null}
         currentPhaseId={selectedCard?.phaseId ?? 0}
         totalPhases={totalPhases}
-        onOpenChange={(open) => { if (!open) setSelectedCard(null); }}
+        onOpenChange={(open) => { if (!open) setSelectedCardInfo(null); }}
       />
     </div>
   );
