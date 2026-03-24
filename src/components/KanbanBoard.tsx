@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useKanbanData } from "@/hooks/useKanbanData";
+import { useAuth } from "@/hooks/useAuth";
 import { KanbanColumn } from "./KanbanColumn";
 import { CreateCardDialog } from "./CreateCardDialog";
 import { CardDetailDialog } from "./CardDetailDialog";
-import { Search, Filter, Plus, Loader2 } from "lucide-react";
+import { Search, Filter, Plus, Loader2, LogOut } from "lucide-react";
 import type { KanbanCard } from "@/data/kanbanData";
 
 export function KanbanBoard() {
