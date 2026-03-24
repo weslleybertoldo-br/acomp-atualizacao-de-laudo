@@ -485,7 +485,13 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                         <Trash2 className="h-3 w-3" />
                       </button>
                     </div>
-                    <p className="text-foreground/80 pl-9">{c.content}</p>
+                    <p className="text-foreground/80 pl-9 whitespace-pre-wrap break-words">
+                      {c.content.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+                        /^https?:\/\//.test(part) ? (
+                          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80 break-all">{part}</a>
+                        ) : part
+                      )}
+                    </p>
                   </div>
                 ))}
               </div>
