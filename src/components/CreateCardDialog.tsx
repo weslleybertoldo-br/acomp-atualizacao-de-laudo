@@ -61,11 +61,14 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
 
           <TabsContent value="single" className="space-y-4 pt-2">
             <Input
-              placeholder="Ex: LAU0050"
+              placeholder="Ex: LAU0050 ou 16/2HFO1001"
               value={singleCode}
               onChange={(e) => setSingleCode(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreateSingle()}
             />
+            <p className="text-[10px] text-muted-foreground">
+              Formato com data: <span className="font-mono">16/2HFO1001</span> → código HFO1001, enviado dia 16/02
+            </p>
             <DialogFooter>
               <Button onClick={handleCreateSingle} disabled={!singleCode.trim() || createCards.isPending}>
                 Criar card
@@ -75,7 +78,7 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
 
           <TabsContent value="multiple" className="space-y-4 pt-2">
             <Textarea
-              placeholder={"Um código por linha:\nLAU0012\nLAU0015"}
+              placeholder={"Um código por linha:\nLAU0012\n16/2HFO1001\n20/3ABC0050"}
               value={multiCodes}
               onChange={(e) => setMultiCodes(e.target.value)}
               rows={6}

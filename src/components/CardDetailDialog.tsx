@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, Tag, User, Pencil } from "lucide-react";
+import { ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, User, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { KanbanCard } from "@/data/kanbanData";
 import {
@@ -43,7 +43,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   const { data: people } = useResponsiblePeople();
   const addPerson = useAddResponsiblePerson();
   const deletePerson = useDeleteResponsiblePerson();
-  const { data: tags } = useKanbanTags();
+  const { data: allTags } = useKanbanTags();
   const addTag = useAddKanbanTag();
   const deleteTag = useDeleteKanbanTag();
   const { data: comments, isLoading: loadingComments } = useCardComments(card?.id ?? "");
@@ -93,17 +93,14 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
-  const handleSelectTag = (tagName: string) => {
+  const handleToggleTag = (tagName: string) => {
+    const currentTags = card.tags ?? [];
+    const newTags = currentTags.includes(tagName)
+      ? currentTags.filter(t => t !== tagName)
+      : [...currentTags, tagName];
     updateCard.mutate(
-      { cardId: card.id, updates: { status_label: tagName } },
-      { onSuccess: () => toast.success("Tag atualizada!") }
-    );
-  };
-
-  const handleRemoveStatusLabel = () => {
-    updateCard.mutate(
-      { cardId: card.id, updates: { status_label: null } },
-      { onSuccess: () => toast.success("Tag removida!") }
+      { cardId: card.id, updates: { tags: newTags } },
+      { onSuccess: () => toast.success("Tags atualizadas!") }
     );
   };
 
@@ -118,36 +115,35 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
-  const currentTag = (tags ?? []).find(t => t.name === card.statusLabel);
-
   return (
     <Dialog open={!!card} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             <span className="text-lg">{card.code}</span>
-            {/* Tag next to code */}
+            {/* Tags next to code */}
+            {(card.tags ?? []).map((tagName) => {
+              const tagData = (allTags ?? []).find(t => t.name === tagName);
+              return (
+                <span
+                  key={tagName}
+                  className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-white"
+                  style={{ backgroundColor: tagData?.color || "#3b82f6" }}
+                >
+                  {tagName}
+                </span>
+              );
+            })}
+            {/* Add/manage tags */}
             <Popover>
               <PopoverTrigger asChild>
-                <button className="flex items-center gap-1 cursor-pointer hover:opacity-80">
-                  {card.statusLabel ? (
-                    <span
-                      className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-white"
-                      style={{ backgroundColor: currentTag?.color || "#3b82f6" }}
-                    >
-                      {card.statusLabel}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground hover:text-foreground">
-                      <Plus className="h-3 w-3" />
-                    </span>
-                  )}
+                <button className="text-muted-foreground hover:text-foreground">
+                  <Plus className="h-3 w-3" />
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-60 p-2 pointer-events-auto" align="start">
                 <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-muted-foreground px-1">Selecionar Tag</p>
-                  {/* Add new tag */}
+                  <p className="text-xs font-semibold text-muted-foreground px-1">Gerenciar Tags</p>
                   <div className="space-y-1.5">
                     <div className="flex gap-1">
                       <Input
@@ -190,36 +186,32 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                     </div>
                   </div>
                   <Separator />
-                  {card.statusLabel && (
-                    <button
-                      onClick={handleRemoveStatusLabel}
-                      className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-destructive/10 text-destructive flex items-center gap-1.5"
-                    >
-                      <X className="h-3 w-3" /> Remover tag
-                    </button>
-                  )}
                   <div className="max-h-40 overflow-y-auto space-y-0.5">
-                    {(tags ?? []).map((t) => (
-                      <div key={t.id} className="flex items-center justify-between group">
-                        <button
-                          onClick={() => handleSelectTag(t.name)}
-                          className={cn(
-                            "flex-1 text-left text-xs px-2 py-1.5 rounded hover:bg-secondary flex items-center gap-2",
-                            card.statusLabel === t.name && "font-semibold"
-                          )}
-                        >
-                          <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
-                          {t.name}
-                        </button>
-                        <button
-                          onClick={() => deleteTag.mutate(t.id, { onSuccess: () => toast.success("Tag removida da lista!") })}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                    {(tags ?? []).length === 0 && (
+                    {(allTags ?? []).map((t) => {
+                      const isSelected = (card.tags ?? []).includes(t.name);
+                      return (
+                        <div key={t.id} className="flex items-center justify-between group">
+                          <button
+                            onClick={() => handleToggleTag(t.name)}
+                            className={cn(
+                              "flex-1 text-left text-xs px-2 py-1.5 rounded hover:bg-secondary flex items-center gap-2",
+                              isSelected && "font-semibold"
+                            )}
+                          >
+                            <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
+                            {t.name}
+                            {isSelected && <Check className="h-3 w-3 ml-auto text-primary" />}
+                          </button>
+                          <button
+                            onClick={() => deleteTag.mutate(t.id, { onSuccess: () => toast.success("Tag removida da lista!") })}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {(allTags ?? []).length === 0 && (
                       <p className="text-[10px] text-muted-foreground px-2 py-1">Nenhuma tag cadastrada.</p>
                     )}
                   </div>
@@ -317,7 +309,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
               </Popover>
             </div>
             <div>
-              <span className="text-muted-foreground text-xs uppercase tracking-wide">Vencimento</span>
+              <span className="text-muted-foreground text-xs uppercase tracking-wide">Data</span>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <Popover>
                   <PopoverTrigger asChild>
