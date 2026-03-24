@@ -11,7 +11,7 @@ import { ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus
 import { cn } from "@/lib/utils";
 import type { KanbanCard } from "@/data/kanbanData";
 import {
-  useMoveCard, useDeleteCard, useUpdateCard, useCardComments, useAddComment,
+  useMoveCard, useDeleteCard, useUpdateCard, useCardComments, useAddComment, useDeleteComment,
   useResponsiblePeople, useAddResponsiblePerson, useDeleteResponsiblePerson,
   useKanbanTags, useAddKanbanTag, useDeleteKanbanTag, buildDueLabel
 } from "@/hooks/useKanbanData";
@@ -33,6 +33,8 @@ const TAG_COLORS = [
 
 export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChange }: CardDetailDialogProps) {
   const [commentText, setCommentText] = useState("");
+  const [editingCode, setEditingCode] = useState(false);
+  const [codeText, setCodeText] = useState("");
   const [newPersonName, setNewPersonName] = useState("");
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0]);
@@ -40,6 +42,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
   const addComment = useAddComment();
+  const deleteComment = useDeleteComment();
   const { data: people } = useResponsiblePeople();
   const addPerson = useAddResponsiblePerson();
   const deletePerson = useDeleteResponsiblePerson();
@@ -120,7 +123,44 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
-            <span className="text-lg">{card.code}</span>
+            {editingCode ? (
+              <div className="flex items-center gap-1">
+                <Input
+                  value={codeText}
+                  onChange={(e) => setCodeText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (codeText.trim()) {
+                        updateCard.mutate(
+                          { cardId: card.id, updates: { code: codeText.trim() } },
+                          { onSuccess: () => { setEditingCode(false); toast.success("Código atualizado!"); } }
+                        );
+                      }
+                    } else if (e.key === "Escape") setEditingCode(false);
+                  }}
+                  className="h-8 text-lg font-bold w-40"
+                  autoFocus
+                />
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => {
+                  if (codeText.trim()) {
+                    updateCard.mutate(
+                      { cardId: card.id, updates: { code: codeText.trim() } },
+                      { onSuccess: () => { setEditingCode(false); toast.success("Código atualizado!"); } }
+                    );
+                  }
+                }}>
+                  <Send className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <span
+                className="text-lg cursor-pointer hover:text-primary transition-colors"
+                onClick={() => { setCodeText(card.code); setEditingCode(true); }}
+                title="Clique para editar"
+              >
+                {card.code}
+              </span>
+            )}
             {/* Tags next to code */}
             {(card.tags ?? []).map((tagName) => {
               const tagData = (allTags ?? []).find(t => t.name === tagName);
@@ -402,7 +442,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
             ) : (
               <div className="space-y-3 max-h-48 overflow-y-auto">
                 {(comments ?? []).map((c) => (
-                  <div key={c.id} className="rounded-lg bg-secondary p-3 text-sm space-y-1.5">
+                  <div key={c.id} className="rounded-lg bg-secondary p-3 text-sm space-y-1.5 group/comment">
                     <div className="flex items-center gap-2">
                       <Avatar className="h-7 w-7 shrink-0">
                         {(c as any).user_avatar ? (
@@ -412,7 +452,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                           {(c.user_name || c.user_email || "?").charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold text-foreground truncate">
                           {c.user_name || c.user_email || "Usuário"}
                         </p>
@@ -420,6 +460,16 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                           {format(new Date(c.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                         </p>
                       </div>
+                      <button
+                        onClick={() => deleteComment.mutate(
+                          { commentId: c.id, cardId: card.id },
+                          { onSuccess: () => toast.success("Comentário excluído!"), onError: () => toast.error("Erro ao excluir.") }
+                        )}
+                        className="opacity-0 group-hover/comment:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-opacity shrink-0"
+                        title="Excluir comentário"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
                     </div>
                     <p className="text-foreground/80 pl-9">{c.content}</p>
                   </div>

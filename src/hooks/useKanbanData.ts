@@ -207,7 +207,7 @@ export function useUpdateCard() {
       updates,
     }: {
       cardId: string;
-      updates: { due_date?: string | null; due_label?: string | null; tags?: string[]; responsible?: string; status_label?: string | null };
+      updates: { due_date?: string | null; due_label?: string | null; tags?: string[]; responsible?: string; status_label?: string | null; code?: string };
     }) => {
       const { error } = await supabase
         .from("kanban_cards")
@@ -262,6 +262,25 @@ export function useAddComment() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["card-comments", variables.cardId] });
+    },
+  });
+}
+
+export function useDeleteComment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ commentId, cardId }: { commentId: string; cardId: string }) => {
+      const { error } = await supabase
+        .from("card_comments")
+        .delete()
+        .eq("id", commentId);
+      if (error) throw error;
+      return cardId;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["card-comments", variables.cardId] });
+      queryClient.invalidateQueries({ queryKey: ["kanban"] });
     },
   });
 }
