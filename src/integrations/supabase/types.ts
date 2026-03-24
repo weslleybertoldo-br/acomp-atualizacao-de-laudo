@@ -20,18 +20,27 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
         }
         Insert: {
           card_id: string
           content: string
           created_at?: string
           id?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
         }
         Update: {
           card_id?: string
           content?: string
           created_at?: string
           id?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
         }
         Relationships: [
           {
