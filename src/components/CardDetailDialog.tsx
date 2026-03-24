@@ -36,6 +36,8 @@ const statusLabels: Record<KanbanCard["status"], string> = {
 export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChange }: CardDetailDialogProps) {
   const [commentText, setCommentText] = useState("");
   const [newTag, setNewTag] = useState("");
+  const [editingResponsible, setEditingResponsible] = useState(false);
+  const [responsibleText, setResponsibleText] = useState("");
   const moveCard = useMoveCard();
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
