@@ -3,9 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, MessageSquare, Send, Loader2 } from "lucide-react";
+import { ArrowRight, MessageSquare, Send, Loader2, Trash2 } from "lucide-react";
 import type { KanbanCard } from "@/data/kanbanData";
-import { useMoveCard, useCardComments, useAddComment } from "@/hooks/useKanbanData";
+import { useMoveCard, useDeleteCard, useCardComments, useAddComment } from "@/hooks/useKanbanData";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -32,6 +32,7 @@ const statusLabels: Record<KanbanCard["status"], string> = {
 export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChange }: CardDetailDialogProps) {
   const [commentText, setCommentText] = useState("");
   const moveCard = useMoveCard();
+  const deleteCard = useDeleteCard();
   const addComment = useAddComment();
   const { data: comments, isLoading: loadingComments } = useCardComments(card?.id ?? "");
 
@@ -50,6 +51,16 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
         onError: () => toast.error("Erro ao mover card."),
       }
     );
+  };
+
+  const handleDelete = () => {
+    deleteCard.mutate(card.id, {
+      onSuccess: () => {
+        toast.success(`Card ${card.code} excluído!`);
+        onOpenChange(false);
+      },
+      onError: () => toast.error("Erro ao excluir card."),
+    });
   };
 
   const handleAddComment = () => {
@@ -118,6 +129,18 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
               </Button>
             </>
           )}
+
+          {/* Delete card */}
+          <Separator />
+          <Button
+            onClick={handleDelete}
+            disabled={deleteCard.isPending}
+            className="w-full"
+            variant="destructive"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Excluir card
+          </Button>
 
           {/* Comments section */}
           <Separator />
