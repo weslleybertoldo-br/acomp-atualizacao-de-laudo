@@ -47,6 +47,18 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        phase: {
+          0: "hsl(var(--phase-0))",
+          1: "hsl(var(--phase-1))",
+          2: "hsl(var(--phase-2))",
+          3: "hsl(var(--phase-3))",
+          4: "hsl(var(--phase-4))",
+        },
+        badge: {
+          on: "hsl(var(--badge-on))",
+          standby: "hsl(var(--badge-standby))",
+          expired: "hsl(var(--badge-expired))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
