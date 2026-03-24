@@ -181,6 +181,23 @@ export function useDeleteCard() {
   });
 }
 
+export function useBulkDeleteCards() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (cardIds: string[]) => {
+      const { error } = await supabase
+        .from("kanban_cards")
+        .delete()
+        .in("id", cardIds);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kanban"] });
+    },
+  });
+}
+
 export function useMoveCard() {
   const queryClient = useQueryClient();
 
