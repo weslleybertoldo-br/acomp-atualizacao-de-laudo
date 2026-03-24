@@ -222,3 +222,50 @@ export function useAddComment() {
     },
   });
 }
+
+export function useResponsiblePeople() {
+  return useQuery({
+    queryKey: ["responsible-people"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("responsible_people")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useAddResponsiblePerson() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const { error } = await supabase
+        .from("responsible_people")
+        .insert({ name: name.trim() });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["responsible-people"] });
+    },
+  });
+}
+
+export function useDeleteResponsiblePerson() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("responsible_people")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["responsible-people"] });
+    },
+  });
+}
