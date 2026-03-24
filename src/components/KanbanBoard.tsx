@@ -160,7 +160,7 @@ export function KanbanBoard() {
           <div className="flex items-center justify-center h-full text-destructive">
             Erro ao carregar dados.
           </div>
-        ) : (
+        ) : activeTab === "kanban" ? (
           <div className="flex gap-4 p-4 min-h-0 h-full">
             {filteredPhases.map((phase) => (
               <KanbanColumn
@@ -176,6 +176,15 @@ export function KanbanBoard() {
                 }}
               />
             ))}
+          </div>
+        ) : activeTab === "lista" ? (
+          <KanbanListView
+            phases={filteredPhases}
+            onCardClick={(card, phaseId) => setSelectedCardInfo({ cardId: card.id, phaseId })}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            Relatórios em breve.
           </div>
         )}
       </div>
