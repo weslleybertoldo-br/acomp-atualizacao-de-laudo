@@ -285,7 +285,7 @@ export function useDeleteComment() {
   });
 }
 
-
+export function useResponsiblePeople() {
   return useQuery({
     queryKey: ["responsible-people"],
     queryFn: async () => {
