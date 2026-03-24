@@ -123,7 +123,44 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
-            <span className="text-lg">{card.code}</span>
+            {editingCode ? (
+              <div className="flex items-center gap-1">
+                <Input
+                  value={codeText}
+                  onChange={(e) => setCodeText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (codeText.trim()) {
+                        updateCard.mutate(
+                          { cardId: card.id, updates: { code: codeText.trim() } },
+                          { onSuccess: () => { setEditingCode(false); toast.success("Código atualizado!"); } }
+                        );
+                      }
+                    } else if (e.key === "Escape") setEditingCode(false);
+                  }}
+                  className="h-8 text-lg font-bold w-40"
+                  autoFocus
+                />
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => {
+                  if (codeText.trim()) {
+                    updateCard.mutate(
+                      { cardId: card.id, updates: { code: codeText.trim() } },
+                      { onSuccess: () => { setEditingCode(false); toast.success("Código atualizado!"); } }
+                    );
+                  }
+                }}>
+                  <Send className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <span
+                className="text-lg cursor-pointer hover:text-primary transition-colors"
+                onClick={() => { setCodeText(card.code); setEditingCode(true); }}
+                title="Clique para editar"
+              >
+                {card.code}
+              </span>
+            )}
             {/* Tags next to code */}
             {(card.tags ?? []).map((tagName) => {
               const tagData = (allTags ?? []).find(t => t.name === tagName);
