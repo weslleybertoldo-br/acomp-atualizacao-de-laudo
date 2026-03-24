@@ -122,13 +122,66 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     <Dialog open={!!card} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
             <span className="text-lg">{card.code}</span>
-            <span
-              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-primary-foreground ${statusColors[card.status]}`}
-            >
-              {card.statusLabel || statusLabels[card.status]}
-            </span>
+            {editingLabel ? (
+              <div className="flex items-center gap-1">
+                <Input
+                  value={labelText}
+                  onChange={(e) => setLabelText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      updateCard.mutate(
+                        { cardId: card.id, updates: { status_label: labelText.trim() || null } },
+                        { onSuccess: () => { setEditingLabel(false); toast.success("Tag atualizada!"); } }
+                      );
+                    } else if (e.key === "Escape") setEditingLabel(false);
+                  }}
+                  className="h-6 text-[10px] w-28"
+                  autoFocus
+                  placeholder="Ex: Aguardando"
+                />
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => {
+                  updateCard.mutate(
+                    { cardId: card.id, updates: { status_label: labelText.trim() || null } },
+                    { onSuccess: () => { setEditingLabel(false); toast.success("Tag atualizada!"); } }
+                  );
+                }}>
+                  <Send className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                {card.statusLabel && (
+                  <span
+                    className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-primary-foreground ${statusColors[card.status]}`}
+                  >
+                    {card.statusLabel}
+                  </span>
+                )}
+                <button
+                  onClick={() => { setLabelText(card.statusLabel || ""); setEditingLabel(true); }}
+                  className="text-muted-foreground hover:text-foreground"
+                  title={card.statusLabel ? "Editar tag" : "Adicionar tag"}
+                >
+                  {card.statusLabel ? <Pencil className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                </button>
+                {card.statusLabel && (
+                  <button
+                    onClick={() => {
+                      updateCard.mutate(
+                        { cardId: card.id, updates: { status_label: null } },
+                        { onSuccess: () => toast.success("Tag removida!") }
+                      );
+                    }}
+                    className="text-muted-foreground hover:text-destructive"
+                    title="Remover tag"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            )}
           </DialogTitle>
         </DialogHeader>
 
