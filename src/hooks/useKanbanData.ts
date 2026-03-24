@@ -75,7 +75,12 @@ export function useKanbanRealtime() {
       .on("postgres_changes", { event: "*", schema: "public", table: "kanban_tags" }, () => {
         queryClient.invalidateQueries({ queryKey: ["kanban-tags"] });
       })
-      .subscribe();
+      .on("postgres_changes", { event: "*", schema: "public", table: "kanban_phases" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["kanban"] });
+      })
+      .subscribe((status) => {
+        console.log("Realtime subscription status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
