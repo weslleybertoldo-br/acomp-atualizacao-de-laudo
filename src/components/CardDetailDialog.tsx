@@ -135,7 +135,62 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <span className="text-muted-foreground text-xs uppercase tracking-wide">Responsável</span>
-              <p className="font-medium">{card.responsible || "—"}</p>
+              {editingResponsible ? (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <Input
+                    value={responsibleText}
+                    onChange={(e) => setResponsibleText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        updateCard.mutate(
+                          { cardId: card.id, updates: { responsible: responsibleText.trim() } },
+                          { onSuccess: () => { setEditingResponsible(false); toast.success("Responsável atualizado!"); } }
+                        );
+                      } else if (e.key === "Escape") {
+                        setEditingResponsible(false);
+                      }
+                    }}
+                    className="h-7 text-xs"
+                    autoFocus
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 shrink-0"
+                    onClick={() => {
+                      updateCard.mutate(
+                        { cardId: card.id, updates: { responsible: responsibleText.trim() } },
+                        { onSuccess: () => { setEditingResponsible(false); toast.success("Responsável atualizado!"); } }
+                      );
+                    }}
+                  >
+                    <Send className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <p className="font-medium">{card.responsible || "—"}</p>
+                  <button
+                    onClick={() => { setResponsibleText(card.responsible || ""); setEditingResponsible(true); }}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                  {card.responsible && (
+                    <button
+                      onClick={() => {
+                        updateCard.mutate(
+                          { cardId: card.id, updates: { responsible: "" } },
+                          { onSuccess: () => toast.success("Responsável removido!") }
+                        );
+                      }}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <span className="text-muted-foreground text-xs uppercase tracking-wide">Vencimento</span>
