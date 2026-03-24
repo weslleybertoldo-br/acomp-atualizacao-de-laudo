@@ -1,7 +1,8 @@
 import { MessageSquare, Paperclip, Calendar } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { KanbanCard as KanbanCardType } from "@/data/kanbanData";
-import { useKanbanTags } from "@/hooks/useKanbanData";
+import { useKanbanTags, useResponsiblePeople } from "@/hooks/useKanbanData";
 import { cn } from "@/lib/utils";
 
 interface KanbanCardItemProps {
@@ -14,6 +15,9 @@ interface KanbanCardItemProps {
 
 export function KanbanCardItem({ card, onClick, selectionMode, isSelected, onToggle }: KanbanCardItemProps) {
   const { data: allTags } = useKanbanTags();
+  const { data: people } = useResponsiblePeople();
+
+  const personData = card.responsible ? (people ?? []).find(p => p.name === card.responsible) : null;
 
   return (
     <div
@@ -53,7 +57,23 @@ export function KanbanCardItem({ card, onClick, selectionMode, isSelected, onTog
         <span className="uppercase tracking-wide text-[10px] font-semibold text-muted-foreground/70">
           Responsável
         </span>
-        <p className="mt-0.5 font-medium text-foreground/80">{card.responsible || "—"}</p>
+        <div className="mt-0.5 flex items-center gap-1.5">
+          {card.responsible ? (
+            <>
+              <Avatar className="h-5 w-5 shrink-0">
+                {personData?.avatar_url ? (
+                  <AvatarImage src={personData.avatar_url} alt={card.responsible} />
+                ) : null}
+                <AvatarFallback className="text-[8px] font-bold bg-primary/20 text-primary">
+                  {card.responsible.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="font-medium text-foreground/80">{card.responsible}</span>
+            </>
+          ) : (
+            <span className="font-medium text-foreground/80">—</span>
+          )}
+        </div>
       </div>
 
       {/* Due date / Sent date */}
