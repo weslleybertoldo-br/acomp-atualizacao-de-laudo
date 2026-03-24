@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useKanbanData } from "@/hooks/useKanbanData";
+import { useAuth } from "@/hooks/useAuth";
 import { KanbanColumn } from "./KanbanColumn";
 import { CreateCardDialog } from "./CreateCardDialog";
 import { CardDetailDialog } from "./CardDetailDialog";
-import { Search, Filter, Plus, Loader2 } from "lucide-react";
+import { Search, Filter, Plus, Loader2, LogOut } from "lucide-react";
 import type { KanbanCard } from "@/data/kanbanData";
 
 export function KanbanBoard() {
+  const { signOut } = useAuth();
   const { data: phases, isLoading, error } = useKanbanData();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<{ card: KanbanCard; phaseId: number } | null>(null);
@@ -33,6 +35,9 @@ export function KanbanBoard() {
           </div>
           <button className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors">
             <Filter className="h-4 w-4" />
+          </button>
+          <button onClick={signOut} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground transition-colors" title="Sair">
+            <LogOut className="h-4 w-4" />
           </button>
         </div>
       </header>

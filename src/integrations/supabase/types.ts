@@ -49,8 +49,8 @@ export type Database = {
           code: string
           comments: number
           created_at: string
-          due_date: string
-          due_label: string
+          due_date: string | null
+          due_label: string | null
           id: string
           phase_id: number
           responsible: string
@@ -65,8 +65,8 @@ export type Database = {
           code: string
           comments?: number
           created_at?: string
-          due_date: string
-          due_label: string
+          due_date?: string | null
+          due_label?: string | null
           id?: string
           phase_id: number
           responsible: string
@@ -81,8 +81,8 @@ export type Database = {
           code?: string
           comments?: number
           created_at?: string
-          due_date?: string
-          due_label?: string
+          due_date?: string | null
+          due_label?: string | null
           id?: string
           phase_id?: number
           responsible?: string

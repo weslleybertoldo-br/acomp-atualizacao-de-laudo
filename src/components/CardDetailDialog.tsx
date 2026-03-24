@@ -2,10 +2,14 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, MessageSquare, Send, Loader2, Trash2 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, Tag } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { KanbanCard } from "@/data/kanbanData";
-import { useMoveCard, useDeleteCard, useCardComments, useAddComment } from "@/hooks/useKanbanData";
+import { useMoveCard, useDeleteCard, useUpdateCard, useCardComments, useAddComment, buildDueLabel } from "@/hooks/useKanbanData";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -31,14 +35,17 @@ const statusLabels: Record<KanbanCard["status"], string> = {
 
 export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChange }: CardDetailDialogProps) {
   const [commentText, setCommentText] = useState("");
+  const [newTag, setNewTag] = useState("");
   const moveCard = useMoveCard();
   const deleteCard = useDeleteCard();
+  const updateCard = useUpdateCard();
   const addComment = useAddComment();
   const { data: comments, isLoading: loadingComments } = useCardComments(card?.id ?? "");
 
   if (!card) return null;
 
   const canMoveNext = currentPhaseId < totalPhases - 1;
+  const currentDate = card.dueDate ? new Date(card.dueDate + "T00:00:00") : undefined;
 
   const handleMoveNext = () => {
     moveCard.mutate(
@@ -63,15 +70,45 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     });
   };
 
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      const dateStr = format(date, "yyyy-MM-dd");
+      updateCard.mutate(
+        { cardId: card.id, updates: { due_date: dateStr, due_label: buildDueLabel(dateStr) } },
+        { onSuccess: () => toast.success("Data atualizada!"), onError: () => toast.error("Erro ao atualizar data.") }
+      );
+    }
+  };
+
+  const handleRemoveDate = () => {
+    updateCard.mutate(
+      { cardId: card.id, updates: { due_date: null, due_label: null } },
+      { onSuccess: () => toast.success("Data removida!"), onError: () => toast.error("Erro ao remover data.") }
+    );
+  };
+
+  const handleAddTag = () => {
+    const tag = newTag.trim();
+    if (!tag || card.tags.includes(tag)) return;
+    updateCard.mutate(
+      { cardId: card.id, updates: { tags: [...card.tags, tag] } },
+      { onSuccess: () => { setNewTag(""); toast.success("Tag adicionada!"); }, onError: () => toast.error("Erro ao adicionar tag.") }
+    );
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    updateCard.mutate(
+      { cardId: card.id, updates: { tags: card.tags.filter((t) => t !== tagToRemove) } },
+      { onSuccess: () => toast.success("Tag removida!"), onError: () => toast.error("Erro ao remover tag.") }
+    );
+  };
+
   const handleAddComment = () => {
     if (!commentText.trim()) return;
     addComment.mutate(
       { cardId: card.id, content: commentText.trim() },
       {
-        onSuccess: () => {
-          setCommentText("");
-          toast.success("Comentário adicionado!");
-        },
+        onSuccess: () => { setCommentText(""); toast.success("Comentário adicionado!"); },
         onError: () => toast.error("Erro ao adicionar comentário."),
       }
     );
@@ -100,30 +137,76 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
             </div>
             <div>
               <span className="text-muted-foreground text-xs uppercase tracking-wide">Vencimento</span>
-              <p className="font-medium">{card.dueLabel}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={cn("justify-start text-left font-normal h-8 text-xs", !currentDate && "text-muted-foreground")}
+                    >
+                      <CalendarIcon className="h-3 w-3 mr-1" />
+                      {currentDate ? format(currentDate, "dd/MM/yyyy") : "Definir data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={currentDate}
+                      onSelect={handleDateChange}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {currentDate && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleRemoveDate}>
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
-          {card.tags.length > 0 && (
+          {/* Tags */}
+          <Separator />
+          <div className="space-y-2">
+            <h4 className="text-xs font-semibold flex items-center gap-1.5 text-muted-foreground uppercase tracking-wide">
+              <Tag className="h-3 w-3" />
+              Tags
+            </h4>
             <div className="flex gap-1.5 flex-wrap">
               {card.tags.map((tag) => (
-                <span key={tag} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                <span
+                  key={tag}
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1"
+                >
                   {tag}
+                  <button onClick={() => handleRemoveTag(tag)} className="hover:text-destructive">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
                 </span>
               ))}
             </div>
-          )}
+            <div className="flex gap-1.5">
+              <Input
+                placeholder="Nova tag..."
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+                className="h-8 text-xs"
+              />
+              <Button size="sm" variant="outline" onClick={handleAddTag} disabled={!newTag.trim()}>
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
 
           {/* Move to next phase */}
           {canMoveNext && (
             <>
               <Separator />
-              <Button
-                onClick={handleMoveNext}
-                disabled={moveCard.isPending}
-                className="w-full"
-                variant="default"
-              >
+              <Button onClick={handleMoveNext} disabled={moveCard.isPending} className="w-full" variant="default">
                 <ArrowRight className="h-4 w-4 mr-2" />
                 Mover para próxima fase
               </Button>
@@ -132,12 +215,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
 
           {/* Delete card */}
           <Separator />
-          <Button
-            onClick={handleDelete}
-            disabled={deleteCard.isPending}
-            className="w-full"
-            variant="destructive"
-          >
+          <Button onClick={handleDelete} disabled={deleteCard.isPending} className="w-full" variant="destructive">
             <Trash2 className="h-4 w-4 mr-2" />
             Excluir card
           </Button>
