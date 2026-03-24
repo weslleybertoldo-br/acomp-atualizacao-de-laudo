@@ -157,7 +157,7 @@ export function KanbanBoard() {
           </div>
         ) : (
           <div className="flex gap-4 p-4 min-h-0 h-full">
-            {(phases ?? []).map((phase) => (
+            {filteredPhases.map((phase) => (
               <KanbanColumn
                 key={phase.id}
                 phase={phase}
