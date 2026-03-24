@@ -8,6 +8,7 @@ import { Search, Filter, Plus, Loader2, LogOut } from "lucide-react";
 import type { KanbanCard } from "@/data/kanbanData";
 
 export function KanbanBoard() {
+  const { signOut } = useAuth();
   const { data: phases, isLoading, error } = useKanbanData();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<{ card: KanbanCard; phaseId: number } | null>(null);
