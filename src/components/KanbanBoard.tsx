@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useKanbanData } from "@/hooks/useKanbanData";
+import { useKanbanData, useKanbanRealtime } from "@/hooks/useKanbanData";
 import { useAuth } from "@/hooks/useAuth";
 import { KanbanColumn } from "./KanbanColumn";
 import { CreateCardDialog } from "./CreateCardDialog";
