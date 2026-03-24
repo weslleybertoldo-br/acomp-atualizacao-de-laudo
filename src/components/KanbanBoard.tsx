@@ -14,6 +14,7 @@ export function KanbanBoard() {
   useKanbanRealtime();
   const { data: phases, isLoading, error } = useKanbanData();
   const [createOpen, setCreateOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedCardInfo, setSelectedCardInfo] = useState<{ cardId: string; phaseId: number } | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedCardIds, setSelectedCardIds] = useState<Set<string>>(new Set());
@@ -28,8 +29,15 @@ export function KanbanBoard() {
     return null;
   })();
 
+  const filteredPhases = (phases ?? []).map(phase => ({
+    ...phase,
+    cards: phase.cards.filter(card =>
+      !searchTerm || card.code.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+  }));
+
   const totalPhases = phases?.length ?? 0;
-  const allCardIds = (phases ?? []).flatMap(p => p.cards.map(c => c.id));
+  const allCardIds = filteredPhases.flatMap(p => p.cards.map(c => c.id));
 
   const toggleCard = (id: string) => {
     setSelectedCardIds(prev => {
@@ -75,6 +83,8 @@ export function KanbanBoard() {
             <input
               type="text"
               placeholder="Procurar cards"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-56"
             />
           </div>
@@ -147,7 +157,7 @@ export function KanbanBoard() {
           </div>
         ) : (
           <div className="flex gap-4 p-4 min-h-0 h-full">
-            {(phases ?? []).map((phase) => (
+            {filteredPhases.map((phase) => (
               <KanbanColumn
                 key={phase.id}
                 phase={phase}
