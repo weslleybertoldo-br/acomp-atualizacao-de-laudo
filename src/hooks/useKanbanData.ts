@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { KanbanCard, KanbanPhase } from "@/data/kanbanData";
@@ -16,6 +17,31 @@ export function buildDueLabel(dateStr: string): string {
   }
   const dist = formatDistanceToNow(date, { locale: ptBR });
   return `Venc ${month}, ${day} · em ${dist}`;
+}
+
+/** Subscribe to realtime changes and auto-invalidate queries */
+export function useKanbanRealtime() {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("kanban-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "kanban_cards" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["kanban"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "card_comments" }, (payload) => {
+        const cardId = (payload.new as any)?.card_id || (payload.old as any)?.card_id;
+        if (cardId) {
+          queryClient.invalidateQueries({ queryKey: ["card-comments", cardId] });
+        }
+        queryClient.invalidateQueries({ queryKey: ["kanban"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 }
 
 export function useKanbanData() {
