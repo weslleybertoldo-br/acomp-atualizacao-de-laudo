@@ -33,12 +33,13 @@ export function KanbanBoard() {
     return null;
   })();
 
-  const filteredPhases = (phases ?? []).map(phase => ({
+  const searchFiltered = (phases ?? []).map(phase => ({
     ...phase,
     cards: phase.cards.filter(card =>
       !searchTerm || card.code.toLowerCase().includes(searchTerm.toLowerCase())
     ),
   }));
+  const filteredPhases = applyFilters(searchFiltered, filters);
 
   const totalPhases = phases?.length ?? 0;
   const allCardIds = filteredPhases.flatMap(p => p.cards.map(c => c.id));
