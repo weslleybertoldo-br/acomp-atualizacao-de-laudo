@@ -192,62 +192,87 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <span className="text-muted-foreground text-xs uppercase tracking-wide">Responsável</span>
-              {editingResponsible ? (
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <Input
-                    value={responsibleText}
-                    onChange={(e) => setResponsibleText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        updateCard.mutate(
-                          { cardId: card.id, updates: { responsible: responsibleText.trim() } },
-                          { onSuccess: () => { setEditingResponsible(false); toast.success("Responsável atualizado!"); } }
-                        );
-                      } else if (e.key === "Escape") {
-                        setEditingResponsible(false);
-                      }
-                    }}
-                    className="h-7 text-xs"
-                    autoFocus
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 shrink-0"
-                    onClick={() => {
-                      updateCard.mutate(
-                        { cardId: card.id, updates: { responsible: responsibleText.trim() } },
-                        { onSuccess: () => { setEditingResponsible(false); toast.success("Responsável atualizado!"); } }
-                      );
-                    }}
-                  >
-                    <Send className="h-3 w-3" />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="mt-0.5 h-8 text-xs justify-start w-full">
+                    <User className="h-3 w-3 mr-1.5" />
+                    {card.responsible || "Selecionar..."}
                   </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <p className="font-medium">{card.responsible || "—"}</p>
-                  <button
-                    onClick={() => { setResponsibleText(card.responsible || ""); setEditingResponsible(true); }}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </button>
-                  {card.responsible && (
-                    <button
-                      onClick={() => {
-                        updateCard.mutate(
-                          { cardId: card.id, updates: { responsible: "" } },
-                          { onSuccess: () => toast.success("Responsável removido!") }
-                        );
-                      }}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              )}
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-2 pointer-events-auto" align="start">
+                  <div className="space-y-1.5">
+                    <div className="flex gap-1">
+                      <Input
+                        placeholder="Novo nome..."
+                        value={newPersonName}
+                        onChange={(e) => setNewPersonName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newPersonName.trim()) {
+                            addPerson.mutate(newPersonName.trim(), {
+                              onSuccess: () => { setNewPersonName(""); toast.success("Pessoa adicionada!"); },
+                              onError: () => toast.error("Erro ou nome já existe."),
+                            });
+                          }
+                        }}
+                        className="h-7 text-xs"
+                      />
+                      <Button size="icon" variant="outline" className="h-7 w-7 shrink-0" onClick={() => {
+                        if (newPersonName.trim()) {
+                          addPerson.mutate(newPersonName.trim(), {
+                            onSuccess: () => { setNewPersonName(""); toast.success("Pessoa adicionada!"); },
+                            onError: () => toast.error("Erro ou nome já existe."),
+                          });
+                        }
+                      }}>
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <Separator />
+                    {card.responsible && (
+                      <button
+                        onClick={() => {
+                          updateCard.mutate(
+                            { cardId: card.id, updates: { responsible: "" } },
+                            { onSuccess: () => toast.success("Responsável removido!") }
+                          );
+                        }}
+                        className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-destructive/10 text-destructive flex items-center gap-1.5"
+                      >
+                        <X className="h-3 w-3" /> Remover responsável
+                      </button>
+                    )}
+                    <div className="max-h-40 overflow-y-auto space-y-0.5">
+                      {(people ?? []).map((p) => (
+                        <div key={p.id} className="flex items-center justify-between group">
+                          <button
+                            onClick={() => {
+                              updateCard.mutate(
+                                { cardId: card.id, updates: { responsible: p.name } },
+                                { onSuccess: () => toast.success("Responsável atualizado!") }
+                              );
+                            }}
+                            className={cn(
+                              "flex-1 text-left text-xs px-2 py-1.5 rounded hover:bg-secondary",
+                              card.responsible === p.name && "bg-primary/10 font-semibold text-primary"
+                            )}
+                          >
+                            {p.name}
+                          </button>
+                          <button
+                            onClick={() => deletePerson.mutate(p.id, { onSuccess: () => toast.success("Pessoa removida da lista!") })}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {(people ?? []).length === 0 && (
+                        <p className="text-[10px] text-muted-foreground px-2 py-1">Nenhuma pessoa cadastrada.</p>
+                      )}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
             <div>
               <span className="text-muted-foreground text-xs uppercase tracking-wide">Vencimento</span>
