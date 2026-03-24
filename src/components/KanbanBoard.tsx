@@ -18,6 +18,7 @@ export function KanbanBoard() {
   const [createOpen, setCreateOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"kanban" | "lista" | "relatorios">("kanban");
+  const [filters, setFilters] = useState<KanbanFilters>(emptyFilters);
   const [selectedCardInfo, setSelectedCardInfo] = useState<{ cardId: string; phaseId: number } | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedCardIds, setSelectedCardIds] = useState<Set<string>>(new Set());
