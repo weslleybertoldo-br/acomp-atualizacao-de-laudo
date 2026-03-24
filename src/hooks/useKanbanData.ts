@@ -189,9 +189,20 @@ export function useAddComment() {
 
   return useMutation({
     mutationFn: async ({ cardId, content }: { cardId: string; content: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || null;
+      const userEmail = user?.email || null;
+      const userId = user?.id || null;
+
       const { error } = await supabase
         .from("card_comments")
-        .insert({ card_id: cardId, content });
+        .insert({
+          card_id: cardId,
+          content,
+          user_id: userId,
+          user_name: userName,
+          user_email: userEmail,
+        });
       if (error) throw error;
     },
     onSuccess: (_data, variables) => {
