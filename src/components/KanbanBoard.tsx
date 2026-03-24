@@ -12,7 +12,17 @@ export function KanbanBoard() {
   useKanbanRealtime();
   const { data: phases, isLoading, error } = useKanbanData();
   const [createOpen, setCreateOpen] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<{ card: KanbanCard; phaseId: number } | null>(null);
+  const [selectedCardInfo, setSelectedCardInfo] = useState<{ cardId: string; phaseId: number } | null>(null);
+
+  // Derive live card data from query instead of stale state
+  const selectedCard = (() => {
+    if (!selectedCardInfo || !phases) return null;
+    for (const phase of phases) {
+      const card = phase.cards.find(c => c.id === selectedCardInfo.cardId);
+      if (card) return { card, phaseId: phase.id };
+    }
+    return null;
+  })();
 
   const totalPhases = phases?.length ?? 0;
 
