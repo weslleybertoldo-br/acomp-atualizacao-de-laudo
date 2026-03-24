@@ -158,19 +158,25 @@ export type Database = {
       }
       responsible_people: {
         Row: {
+          avatar_url: string | null
           created_at: string
           id: string
           name: string
+          user_id: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           id?: string
           name: string
+          user_id?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           id?: string
           name?: string
+          user_id?: string | null
         }
         Relationships: []
       }
