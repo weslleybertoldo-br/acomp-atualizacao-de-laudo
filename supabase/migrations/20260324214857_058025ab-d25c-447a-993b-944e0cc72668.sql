@@ -1,0 +1,5 @@
+ALTER TABLE public.kanban_cards REPLICA IDENTITY FULL;
+ALTER TABLE public.card_comments REPLICA IDENTITY FULL;
+ALTER TABLE public.responsible_people REPLICA IDENTITY FULL;
+ALTER TABLE public.kanban_tags REPLICA IDENTITY FULL;
+ALTER TABLE public.kanban_phases REPLICA IDENTITY FULL;
