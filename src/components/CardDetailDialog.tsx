@@ -38,6 +38,8 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   const [newTag, setNewTag] = useState("");
   const [editingResponsible, setEditingResponsible] = useState(false);
   const [responsibleText, setResponsibleText] = useState("");
+  const [editingLabel, setEditingLabel] = useState(false);
+  const [labelText, setLabelText] = useState("");
   const moveCard = useMoveCard();
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
