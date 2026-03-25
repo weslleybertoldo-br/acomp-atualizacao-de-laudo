@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, User, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, User, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { KanbanCard } from "@/data/kanbanData";
 import {
@@ -54,6 +54,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   if (!card) return null;
 
   const canMoveNext = currentPhaseId < totalPhases - 1;
+  const canMovePrev = currentPhaseId > 0;
   const currentDate = card.dueDate ? new Date(card.dueDate + "T00:00:00") : undefined;
 
   const handleMoveNext = () => {
@@ -62,6 +63,19 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
       {
         onSuccess: () => {
           toast.success(`Card ${card.code} movido para a próxima fase!`);
+          onOpenChange(false);
+        },
+        onError: () => toast.error("Erro ao mover card."),
+      }
+    );
+  };
+
+  const handleMovePrev = () => {
+    moveCard.mutate(
+      { cardId: card.id, newPhaseId: currentPhaseId - 1 },
+      {
+        onSuccess: () => {
+          toast.success(`Card ${card.code} retornado para a fase anterior!`);
           onOpenChange(false);
         },
         onError: () => toast.error("Erro ao mover card."),
@@ -411,13 +425,23 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
           </div>
 
           {/* Move to next phase */}
-          {canMoveNext && (
+          {(canMovePrev || canMoveNext) && (
             <>
               <Separator />
-              <Button onClick={handleMoveNext} disabled={moveCard.isPending} className="w-full" variant="default">
-                <ArrowRight className="h-4 w-4 mr-2" />
-                Mover para próxima fase
-              </Button>
+              <div className="flex gap-2">
+                {canMovePrev && (
+                  <Button onClick={handleMovePrev} disabled={moveCard.isPending} className="flex-1" variant="outline">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Fase anterior
+                  </Button>
+                )}
+                {canMoveNext && (
+                  <Button onClick={handleMoveNext} disabled={moveCard.isPending} className="flex-1" variant="default">
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Próxima fase
+                  </Button>
+                )}
+              </div>
             </>
           )}
 
