@@ -425,13 +425,23 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
           </div>
 
           {/* Move to next phase */}
-          {canMoveNext && (
+          {(canMovePrev || canMoveNext) && (
             <>
               <Separator />
-              <Button onClick={handleMoveNext} disabled={moveCard.isPending} className="w-full" variant="default">
-                <ArrowRight className="h-4 w-4 mr-2" />
-                Mover para próxima fase
-              </Button>
+              <div className="flex gap-2">
+                {canMovePrev && (
+                  <Button onClick={handleMovePrev} disabled={moveCard.isPending} className="flex-1" variant="outline">
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Fase anterior
+                  </Button>
+                )}
+                {canMoveNext && (
+                  <Button onClick={handleMoveNext} disabled={moveCard.isPending} className="flex-1" variant="default">
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Próxima fase
+                  </Button>
+                )}
+              </div>
             </>
           )}
 
