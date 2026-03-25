@@ -448,10 +448,28 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
 
           {/* Delete card */}
           <Separator />
-          <Button onClick={handleDelete} disabled={deleteCard.isPending} className="w-full" variant="destructive">
-            <Trash2 className="h-4 w-4 mr-2" />
-            Excluir card
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button disabled={deleteCard.isPending} className="w-full" variant="destructive">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir card
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Certeza que deseja excluir?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  O card <strong>{card.code}</strong> será excluído permanentemente. Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           {/* Comments section */}
           <Separator />
