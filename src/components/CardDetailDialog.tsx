@@ -70,6 +70,19 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
+  const handleMovePrev = () => {
+    moveCard.mutate(
+      { cardId: card.id, newPhaseId: currentPhaseId - 1 },
+      {
+        onSuccess: () => {
+          toast.success(`Card ${card.code} retornado para a fase anterior!`);
+          onOpenChange(false);
+        },
+        onError: () => toast.error("Erro ao mover card."),
+      }
+    );
+  };
+
   const handleDelete = () => {
     deleteCard.mutate(card.id, {
       onSuccess: () => {
