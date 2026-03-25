@@ -53,6 +53,7 @@ export default {
           2: "hsl(var(--phase-2))",
           3: "hsl(var(--phase-3))",
           4: "hsl(var(--phase-4))",
+          5: "hsl(var(--phase-5))",
         },
         badge: {
           on: "hsl(var(--badge-on))",
