@@ -8,6 +8,7 @@ const phaseAccentClasses: Record<number, string> = {
   2: "border-t-phase-2",
   3: "border-t-phase-3",
   4: "border-t-phase-4",
+  5: "border-t-phase-5",
 };
 
 interface KanbanColumnProps {
