@@ -54,6 +54,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   if (!card) return null;
 
   const canMoveNext = currentPhaseId < totalPhases - 1;
+  const canMovePrev = currentPhaseId > 0;
   const currentDate = card.dueDate ? new Date(card.dueDate + "T00:00:00") : undefined;
 
   const handleMoveNext = () => {
