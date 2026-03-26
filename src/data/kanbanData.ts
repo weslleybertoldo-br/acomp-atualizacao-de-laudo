@@ -9,6 +9,9 @@ export interface KanbanCard {
   comments: number;
   attachments: number;
   tags: string[];
+  updateResponsible?: string;
+  sapronAdded?: boolean;
+  driveLinks?: string[];
 }
 
 export interface KanbanPhase {

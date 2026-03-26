@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, User, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, User, Check, Link as LinkIcon, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { KanbanCard } from "@/data/kanbanData";
 import {
@@ -39,6 +39,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   const [newPersonName, setNewPersonName] = useState("");
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0]);
+  const [newDriveLink, setNewDriveLink] = useState("");
   const moveCard = useMoveCard();
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
@@ -445,6 +446,168 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
               </div>
             </>
           )}
+
+          {/* Responsável pela atualização de laudo */}
+          <Separator />
+          <div className="space-y-3">
+            <span className="text-muted-foreground text-xs uppercase tracking-wide font-semibold">
+              Responsável pela atualização de laudo
+            </span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 text-xs justify-start w-full">
+                  {card.updateResponsible ? (() => {
+                    const personData = (people ?? []).find(p => p.name === card.updateResponsible);
+                    return personData?.avatar_url ? (
+                      <Avatar className="h-5 w-5 mr-1.5 shrink-0">
+                        <AvatarImage src={personData.avatar_url} alt={card.updateResponsible} />
+                        <AvatarFallback className="text-[8px] font-bold bg-primary/20 text-primary">
+                          {card.updateResponsible!.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <User className="h-3 w-3 mr-1.5" />
+                    );
+                  })() : (
+                    <User className="h-3 w-3 mr-1.5" />
+                  )}
+                  {card.updateResponsible || "Selecionar..."}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-2 pointer-events-auto" align="start">
+                <div className="space-y-1.5">
+                  {card.updateResponsible && (
+                    <button
+                      onClick={() => {
+                        updateCard.mutate(
+                          { cardId: card.id, updates: { update_responsible: "" } },
+                          { onSuccess: () => toast.success("Responsável removido!") }
+                        );
+                      }}
+                      className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-destructive/10 text-destructive flex items-center gap-1.5"
+                    >
+                      <X className="h-3 w-3" /> Remover responsável
+                    </button>
+                  )}
+                  <div className="max-h-40 overflow-y-auto space-y-0.5">
+                    {(people ?? []).map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => {
+                          updateCard.mutate(
+                            { cardId: card.id, updates: { update_responsible: p.name } },
+                            { onSuccess: () => toast.success("Responsável pela atualização definido!") }
+                          );
+                        }}
+                        className={cn(
+                          "w-full text-left text-xs px-2 py-1.5 rounded hover:bg-secondary flex items-center gap-2",
+                          card.updateResponsible === p.name && "bg-primary/10 font-semibold text-primary"
+                        )}
+                      >
+                        <Avatar className="h-5 w-5 shrink-0">
+                          {(p as any).avatar_url ? (
+                            <AvatarImage src={(p as any).avatar_url} alt={p.name} />
+                          ) : null}
+                          <AvatarFallback className="text-[8px] font-bold bg-primary/20 text-primary">
+                            {p.name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {p.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Laudo adicionado na Sapron */}
+          <div>
+            <Button
+              variant={card.sapronAdded ? "default" : "outline"}
+              size="sm"
+              className="w-full h-9 text-xs justify-start gap-2"
+              onClick={() => {
+                updateCard.mutate(
+                  { cardId: card.id, updates: { sapron_added: !card.sapronAdded } },
+                  { onSuccess: () => toast.success(card.sapronAdded ? "Desmarcado!" : "Laudo marcado como adicionado na Sapron!") }
+                );
+              }}
+            >
+              <div className={cn(
+                "h-4 w-4 rounded border flex items-center justify-center shrink-0",
+                card.sapronAdded ? "bg-primary-foreground border-primary-foreground" : "border-input"
+              )}>
+                {card.sapronAdded && <Check className="h-3 w-3 text-primary" />}
+              </div>
+              Laudo adicionado na Sapron
+            </Button>
+          </div>
+
+          {/* Link do Drive */}
+          <div className="space-y-2">
+            <span className="text-muted-foreground text-xs uppercase tracking-wide font-semibold">
+              Link do Drive
+            </span>
+            <div className="flex gap-1">
+              <Input
+                placeholder="Adicionar link..."
+                value={newDriveLink}
+                onChange={(e) => setNewDriveLink(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newDriveLink.trim()) {
+                    const currentLinks = card.driveLinks ?? [];
+                    updateCard.mutate(
+                      { cardId: card.id, updates: { drive_links: [...currentLinks, newDriveLink.trim()] } },
+                      { onSuccess: () => { setNewDriveLink(""); toast.success("Link adicionado!"); } }
+                    );
+                  }
+                }}
+                className="h-8 text-xs"
+              />
+              <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => {
+                if (newDriveLink.trim()) {
+                  const currentLinks = card.driveLinks ?? [];
+                  updateCard.mutate(
+                    { cardId: card.id, updates: { drive_links: [...currentLinks, newDriveLink.trim()] } },
+                    { onSuccess: () => { setNewDriveLink(""); toast.success("Link adicionado!"); } }
+                  );
+                }
+              }}>
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+            {(card.driveLinks ?? []).length > 0 && (
+              <div className="space-y-1">
+                {(card.driveLinks ?? []).map((link, i) => (
+                  <div key={i} className="flex items-center gap-1.5 group/link">
+                    <LinkIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary underline hover:text-primary/80 truncate flex-1"
+                    >
+                      {link}
+                    </a>
+                    <button
+                      onClick={() => {
+                        const currentLinks = card.driveLinks ?? [];
+                        const newLinks = currentLinks.filter((_, idx) => idx !== i);
+                        updateCard.mutate(
+                          { cardId: card.id, updates: { drive_links: newLinks } },
+                          { onSuccess: () => toast.success("Link removido!") }
+                        );
+                      }}
+                      className="opacity-0 group-hover/link:opacity-100 p-0.5 text-muted-foreground hover:text-destructive transition-opacity shrink-0"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Delete card */}
           <Separator />

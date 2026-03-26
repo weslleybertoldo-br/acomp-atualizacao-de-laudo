@@ -133,6 +133,9 @@ export function useKanbanData() {
             comments: countMap[c.id] || 0,
             attachments: c.attachments,
             tags: c.tags ?? [],
+            updateResponsible: c.update_responsible ?? "",
+            sapronAdded: c.sapron_added ?? false,
+            driveLinks: c.drive_links ?? [],
           })),
       }));
     },
@@ -229,7 +232,7 @@ export function useUpdateCard() {
       updates,
     }: {
       cardId: string;
-      updates: { due_date?: string | null; due_label?: string | null; tags?: string[]; responsible?: string; status_label?: string | null; code?: string };
+      updates: { due_date?: string | null; due_label?: string | null; tags?: string[]; responsible?: string; status_label?: string | null; code?: string; update_responsible?: string; sapron_added?: boolean; drive_links?: string[] };
     }) => {
       const { error } = await supabase
         .from("kanban_cards")
