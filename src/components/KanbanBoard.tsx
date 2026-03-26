@@ -190,7 +190,7 @@ export function KanbanBoard() {
       </div>
 
       {/* FAB */}
-      {!selectionMode && (
+      {!selectionMode && activeTab !== "relatorios" && (
         <button
           onClick={() => setCreateOpen(true)}
           className="fixed bottom-6 left-6 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-full shadow-lg hover:opacity-90 transition-opacity text-sm font-semibold"
