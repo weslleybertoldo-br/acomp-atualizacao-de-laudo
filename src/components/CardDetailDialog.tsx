@@ -483,6 +483,33 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
               </PopoverTrigger>
               <PopoverContent className="w-56 p-2 pointer-events-auto" align="start">
                 <div className="space-y-1.5">
+                  <div className="flex gap-1">
+                    <Input
+                      placeholder="Novo nome..."
+                      value={newPersonName}
+                      onChange={(e) => setNewPersonName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && newPersonName.trim()) {
+                          addPerson.mutate(newPersonName.trim(), {
+                            onSuccess: () => { setNewPersonName(""); toast.success("Pessoa adicionada!"); },
+                            onError: () => toast.error("Erro ou nome já existe."),
+                          });
+                        }
+                      }}
+                      className="h-7 text-xs"
+                    />
+                    <Button size="icon" variant="outline" className="h-7 w-7 shrink-0" onClick={() => {
+                      if (newPersonName.trim()) {
+                        addPerson.mutate(newPersonName.trim(), {
+                          onSuccess: () => { setNewPersonName(""); toast.success("Pessoa adicionada!"); },
+                          onError: () => toast.error("Erro ou nome já existe."),
+                        });
+                      }
+                    }}>
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <Separator />
                   {card.updateResponsible && (
                     <button
                       onClick={() => {
@@ -498,30 +525,40 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                   )}
                   <div className="max-h-40 overflow-y-auto space-y-0.5">
                     {(people ?? []).map((p) => (
-                      <button
-                        key={p.id}
-                        onClick={() => {
-                          updateCard.mutate(
-                            { cardId: card.id, updates: { update_responsible: p.name } },
-                            { onSuccess: () => toast.success("Responsável pela atualização definido!") }
-                          );
-                        }}
-                        className={cn(
-                          "w-full text-left text-xs px-2 py-1.5 rounded hover:bg-secondary flex items-center gap-2",
-                          card.updateResponsible === p.name && "bg-primary/10 font-semibold text-primary"
-                        )}
-                      >
-                        <Avatar className="h-5 w-5 shrink-0">
-                          {(p as any).avatar_url ? (
-                            <AvatarImage src={(p as any).avatar_url} alt={p.name} />
-                          ) : null}
-                          <AvatarFallback className="text-[8px] font-bold bg-primary/20 text-primary">
-                            {p.name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        {p.name}
-                      </button>
+                      <div key={p.id} className="flex items-center justify-between group">
+                        <button
+                          onClick={() => {
+                            updateCard.mutate(
+                              { cardId: card.id, updates: { update_responsible: p.name } },
+                              { onSuccess: () => toast.success("Responsável pela atualização definido!") }
+                            );
+                          }}
+                          className={cn(
+                            "flex-1 text-left text-xs px-2 py-1.5 rounded hover:bg-secondary flex items-center gap-2",
+                            card.updateResponsible === p.name && "bg-primary/10 font-semibold text-primary"
+                          )}
+                        >
+                          <Avatar className="h-5 w-5 shrink-0">
+                            {(p as any).avatar_url ? (
+                              <AvatarImage src={(p as any).avatar_url} alt={p.name} />
+                            ) : null}
+                            <AvatarFallback className="text-[8px] font-bold bg-primary/20 text-primary">
+                              {p.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {p.name}
+                        </button>
+                        <button
+                          onClick={() => deletePerson.mutate(p.id, { onSuccess: () => toast.success("Pessoa removida da lista!") })}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
                     ))}
+                    {(people ?? []).length === 0 && (
+                      <p className="text-[10px] text-muted-foreground px-2 py-1">Nenhuma pessoa cadastrada.</p>
+                    )}
                   </div>
                 </div>
               </PopoverContent>
