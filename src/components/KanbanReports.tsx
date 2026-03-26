@@ -169,7 +169,7 @@ export function KanbanReports() {
                 className={`group flex items-center gap-1 rounded-md px-2 py-1.5 cursor-pointer transition-colors ${
                   selectedReportId === report.id ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-foreground"
                 }`}
-                onClick={() => loadReport(report)}
+                onClick={() => selectedReportId === report.id ? setSelectedReportId(null) : loadReport(report)}
               >
                 <FileText className="h-3.5 w-3.5 shrink-0" />
                 {editingNameId === report.id ? (
