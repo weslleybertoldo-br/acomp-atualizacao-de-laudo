@@ -3,7 +3,9 @@ import { useKanbanData, useResponsiblePeople } from "@/hooks/useKanbanData";
 import { format, subDays, startOfDay, endOfDay, isBefore, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Copy } from "lucide-react";
+import { toast } from "sonner";
 interface ReportContentProps {
   periodPreset: string;
   customStart: string | null;
