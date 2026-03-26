@@ -1,0 +1,1 @@
+UPDATE public.saved_reports SET period_preset = '' WHERE period_preset = '30dias';
