@@ -699,7 +699,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                     <p className="text-foreground/80 pl-9 whitespace-pre-wrap break-words">
                       {c.content.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
                         /^https?:\/\//.test(part) ? (
-                          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80 break-all">{part}</a>
+                          <button key={i} onClick={(e) => { e.stopPropagation(); window.open(part, '_blank', 'noopener,noreferrer'); }} className="text-primary underline hover:text-primary/80 break-all cursor-pointer inline">{part}</button>
                         ) : part
                       )}
                     </p>
