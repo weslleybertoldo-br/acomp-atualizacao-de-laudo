@@ -102,7 +102,7 @@ export function useKanbanData() {
       const { data: cards, error: cardsError } = await supabase
         .from("kanban_cards")
         .select("*")
-        .order("sort_order");
+        .order("created_at", { ascending: true });
 
       if (cardsError) throw cardsError;
 
