@@ -73,19 +73,16 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
     return cards;
   }, [allCards, dateRange, selectedPhases, selectedVariable, selectedValues]);
 
-  // No filters applied at all → show nothing
-  const hasAnyFilter = !!dateRange || selectedPhases.length > 0 || (selectedVariable && selectedValues.length > 0);
+  // Require at least a variable with values selected to show cards
+  const hasVariableFilter = !!(selectedVariable && selectedValues.length > 0);
 
   const getPersonAvatar = (name: string) => {
     return (people ?? []).find(p => p.name === name);
   };
 
-  // Group by variable if selected, otherwise just show flat list
+  // Group by variable — only show data when variable+values are selected
   const groupedData = useMemo(() => {
-    if (!selectedVariable || selectedValues.length === 0) {
-      if (!hasAnyFilter) return [];
-      return [["Todos os cards", filteredCards] as [string, typeof filteredCards]];
-    }
+    if (!hasVariableFilter) return [];
 
     const map: Record<string, typeof filteredCards> = {};
     for (const card of filteredCards) {
@@ -110,12 +107,12 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
       }
     }
     return Object.entries(map).sort((a, b) => b[1].length - a[1].length);
-  }, [selectedVariable, selectedValues, filteredCards, hasAnyFilter]);
+  }, [selectedVariable, selectedValues, filteredCards, hasVariableFilter]);
 
-  if (!hasAnyFilter) {
+  if (!hasVariableFilter) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        <p className="text-sm">Selecione pelo menos um filtro acima para visualizar os cards.</p>
+        <p className="text-sm">Selecione uma variável e seus valores para visualizar os cards.</p>
       </div>
     );
   }
