@@ -586,6 +586,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                       href={link}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="text-xs text-primary underline hover:text-primary/80 truncate flex-1"
                     >
                       {link}
