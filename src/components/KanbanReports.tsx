@@ -1,25 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSavedReports, useCreateSavedReport, useUpdateSavedReport, useDeleteSavedReport, type SavedReport } from "@/hooks/useSavedReports";
+import { useKanbanData, useResponsiblePeople } from "@/hooks/useKanbanData";
 import { ReportContent } from "./ReportContent";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { Plus, CalendarIcon, Pencil, Trash2, Save, Check, X, FileText } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, CalendarIcon, Pencil, Trash2, Save, Check, X, FileText, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-type ReportType = "responsavel_atualizacao" | "responsavel" | "fase" | "tag" | "sapron" | "cards_periodo";
-type PeriodPreset = "hoje" | "7dias" | "30dias" | "custom";
-
-const REPORT_OPTIONS: { value: ReportType; label: string }[] = [
-  { value: "responsavel_atualizacao", label: "Cards por responsável de atualização de laudo" },
-  { value: "responsavel", label: "Cards por responsável" },
-  { value: "fase", label: "Cards por fase" },
-  { value: "tag", label: "Cards por tag" },
-  { value: "sapron", label: "Laudo adicionado na Sapron" },
-  { value: "cards_periodo", label: "Cards criados no período" },
-];
+type PeriodPreset = "hoje" | "7dias" | "30dias" | "custom" | "";
+type VariableType = "responsavel_atualizacao" | "responsavel" | "tag" | "sapron";
 
 const PERIOD_OPTIONS: { value: PeriodPreset; label: string }[] = [
   { value: "hoje", label: "Hoje" },
@@ -28,23 +21,38 @@ const PERIOD_OPTIONS: { value: PeriodPreset; label: string }[] = [
   { value: "custom", label: "Personalizado" },
 ];
 
+const VARIABLE_OPTIONS: { value: VariableType; label: string }[] = [
+  { value: "responsavel_atualizacao", label: "Responsável pela atualização de laudo" },
+  { value: "responsavel", label: "Responsável" },
+  { value: "tag", label: "Tag" },
+  { value: "sapron", label: "Laudo adicionado na Sapron" },
+];
+
 export function KanbanReports() {
   const { data: savedReports, isLoading } = useSavedReports();
   const createReport = useCreateSavedReport();
   const updateReport = useUpdateSavedReport();
   const deleteReport = useDeleteSavedReport();
+  const { data: phases } = useKanbanData();
+  const { data: people } = useResponsiblePeople();
 
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editingNameValue, setEditingNameValue] = useState("");
 
-  // Local state for current report config
-  const [reportType, setReportType] = useState<ReportType>("responsavel_atualizacao");
-  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>("30dias");
+  // Filter state
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>("");
   const [customStart, setCustomStart] = useState<Date | undefined>(undefined);
   const [customEnd, setCustomEnd] = useState<Date | undefined>(undefined);
+  const [selectedVariable, setSelectedVariable] = useState<VariableType | "">("");
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  const [selectedPhases, setSelectedPhases] = useState<number[]>([]);
 
-  // When saved reports load, auto-select the first one
+  // Dropdown open states
+  const [variableDropdownOpen, setVariableDropdownOpen] = useState(false);
+  const [valuesDropdownOpen, setValuesDropdownOpen] = useState(false);
+  const [phaseDropdownOpen, setPhaseDropdownOpen] = useState(false);
+
   useEffect(() => {
     if (savedReports && savedReports.length > 0 && !selectedReportId) {
       loadReport(savedReports[0]);
@@ -53,10 +61,50 @@ export function KanbanReports() {
 
   const loadReport = (report: SavedReport) => {
     setSelectedReportId(report.id);
-    setReportType(report.report_type as ReportType);
-    setPeriodPreset(report.period_preset as PeriodPreset);
+    setPeriodPreset((report.period_preset || "") as PeriodPreset);
     setCustomStart(report.custom_start ? new Date(report.custom_start) : undefined);
     setCustomEnd(report.custom_end ? new Date(report.custom_end) : undefined);
+    setSelectedVariable((report.selected_variable || "") as VariableType | "");
+    setSelectedValues(report.selected_values ?? []);
+    setSelectedPhases(report.selected_phases ?? []);
+  };
+
+  // Available values for the selected variable
+  const availableValues = useMemo(() => {
+    if (!phases) return [];
+    const allCards = phases.flatMap(p => p.cards);
+
+    switch (selectedVariable) {
+      case "responsavel_atualizacao": {
+        const peopleNames = (people ?? []).map(p => p.name);
+        const fromCards = [...new Set(allCards.map(c => c.updateResponsible).filter(Boolean))] as string[];
+        return [...new Set([...peopleNames, ...fromCards])].sort();
+      }
+      case "responsavel": {
+        const peopleNames = (people ?? []).map(p => p.name);
+        const fromCards = [...new Set(allCards.map(c => c.responsible).filter(Boolean))] as string[];
+        return [...new Set([...peopleNames, ...fromCards])].sort();
+      }
+      case "tag": {
+        const tags = new Set<string>();
+        allCards.forEach(c => (c.tags ?? []).forEach(t => tags.add(t)));
+        return [...tags].sort();
+      }
+      case "sapron":
+        return ["sim", "nao"];
+      default:
+        return [];
+    }
+  }, [selectedVariable, phases, people]);
+
+  const valueLabelMap: Record<string, string> = { sim: "Marcado na Sapron", nao: "Não marcado na Sapron" };
+
+  const toggleValue = (val: string) => {
+    setSelectedValues(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
+  };
+
+  const togglePhase = (phaseId: number) => {
+    setSelectedPhases(prev => prev.includes(phaseId) ? prev.filter(p => p !== phaseId) : [...prev, phaseId]);
   };
 
   const handleCreate = () => {
@@ -76,10 +124,12 @@ export function KanbanReports() {
     updateReport.mutate({
       id: selectedReportId,
       updates: {
-        report_type: reportType,
         period_preset: periodPreset,
         custom_start: periodPreset === "custom" && customStart ? format(customStart, "yyyy-MM-dd") : null,
         custom_end: periodPreset === "custom" && customEnd ? format(customEnd, "yyyy-MM-dd") : null,
+        selected_variable: selectedVariable || null,
+        selected_values: selectedValues,
+        selected_phases: selectedPhases,
       },
     }, {
       onSuccess: () => toast.success("Relatório salvo!"),
@@ -90,19 +140,14 @@ export function KanbanReports() {
   const handleRename = (id: string) => {
     if (!editingNameValue.trim()) return;
     updateReport.mutate({ id, updates: { name: editingNameValue.trim() } }, {
-      onSuccess: () => {
-        setEditingNameId(null);
-        toast.success("Renomeado!");
-      },
+      onSuccess: () => { setEditingNameId(null); toast.success("Renomeado!"); },
     });
   };
 
   const handleDelete = (id: string) => {
     deleteReport.mutate(id, {
       onSuccess: () => {
-        if (selectedReportId === id) {
-          setSelectedReportId(null);
-        }
+        if (selectedReportId === id) setSelectedReportId(null);
         toast.success("Relatório excluído!");
       },
       onError: () => toast.error("Erro ao excluir."),
@@ -113,7 +158,7 @@ export function KanbanReports() {
 
   return (
     <div className="flex h-full">
-      {/* Sidebar with saved reports */}
+      {/* Sidebar */}
       <div className="w-56 shrink-0 border-r border-border bg-card flex flex-col">
         <div className="p-3 border-b border-border">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Relatórios salvos</span>
@@ -154,16 +199,10 @@ export function KanbanReports() {
                   <>
                     <span className="text-xs font-medium truncate flex-1">{report.name}</span>
                     <div className="hidden group-hover:flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => { setEditingNameId(report.id); setEditingNameValue(report.name); }}
-                        className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
-                      >
+                      <button onClick={() => { setEditingNameId(report.id); setEditingNameValue(report.name); }} className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground">
                         <Pencil className="h-3 w-3" />
                       </button>
-                      <button
-                        onClick={() => handleDelete(report.id)}
-                        className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                      >
+                      <button onClick={() => handleDelete(report.id)} className="p-0.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                         <Trash2 className="h-3 w-3" />
                       </button>
                     </div>
@@ -173,7 +212,6 @@ export function KanbanReports() {
             ))
           )}
         </div>
-        {/* Create button */}
         <div className="p-2 border-t border-border">
           <button
             onClick={handleCreate}
@@ -193,88 +231,170 @@ export function KanbanReports() {
             <div className="w-16 h-16 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center">
               <Plus className="h-8 w-8 text-muted-foreground/50" />
             </div>
-            <div className="text-center">
-              <p className="text-sm font-medium">Nenhum relatório selecionado</p>
-              <p className="text-xs mt-1">Clique em "Criar relatório" para começar</p>
-            </div>
+            <p className="text-sm font-medium">Clique em "Criar relatório" para começar</p>
           </div>
         ) : (
-          <div className="p-4 space-y-4 max-w-4xl">
-            {/* Report name */}
+          <div className="p-4 space-y-4 max-w-5xl">
             <h2 className="text-lg font-bold text-foreground">{selectedReport.name}</h2>
 
-            {/* Period selector */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Período:</span>
-              {PERIOD_OPTIONS.map(p => (
-                <Button
-                  key={p.value}
-                  variant={periodPreset === p.value ? "default" : "outline"}
-                  size="sm"
-                  className="h-8 text-xs"
-                  onClick={() => setPeriodPreset(p.value)}
-                >
-                  {p.label}
-                </Button>
-              ))}
-              {periodPreset === "custom" && (
-                <div className="flex items-center gap-1.5">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 text-xs">
-                        <CalendarIcon className="h-3 w-3 mr-1" />
-                        {customStart ? format(customStart, "dd/MM/yyyy") : "Início"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={customStart} onSelect={setCustomStart} initialFocus className="p-3 pointer-events-auto" />
-                    </PopoverContent>
-                  </Popover>
-                  <span className="text-xs text-muted-foreground">até</span>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 text-xs">
-                        <CalendarIcon className="h-3 w-3 mr-1" />
-                        {customEnd ? format(customEnd, "dd/MM/yyyy") : "Fim"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={customEnd} onSelect={setCustomEnd} initialFocus className="p-3 pointer-events-auto" />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
-            </div>
+            {/* Filters row */}
+            <div className="flex flex-wrap items-start gap-4">
+              {/* 1. Período */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Período</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 text-xs w-44 justify-between">
+                      {periodPreset ? PERIOD_OPTIONS.find(p => p.value === periodPreset)?.label ?? "Selecionar" : "Selecionar período"}
+                      <ChevronDown className="h-3 w-3 ml-1" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-44 p-1" align="start">
+                    <div className="space-y-0.5">
+                      {PERIOD_OPTIONS.map(p => (
+                        <button
+                          key={p.value}
+                          onClick={() => { setPeriodPreset(p.value); }}
+                          className={`w-full text-left text-xs px-2 py-1.5 rounded transition-colors ${periodPreset === p.value ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                {periodPreset === "custom" && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-7 text-xs">
+                          <CalendarIcon className="h-3 w-3 mr-1" />
+                          {customStart ? format(customStart, "dd/MM/yyyy") : "Início"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={customStart} onSelect={setCustomStart} initialFocus className="p-3 pointer-events-auto" />
+                      </PopoverContent>
+                    </Popover>
+                    <span className="text-xs text-muted-foreground">até</span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-7 text-xs">
+                          <CalendarIcon className="h-3 w-3 mr-1" />
+                          {customEnd ? format(customEnd, "dd/MM/yyyy") : "Fim"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={customEnd} onSelect={setCustomEnd} initialFocus className="p-3 pointer-events-auto" />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+              </div>
 
-            {/* Report type selector */}
-            <div className="flex flex-wrap gap-2">
-              {REPORT_OPTIONS.map(opt => (
-                <Button
-                  key={opt.value}
-                  variant={reportType === opt.value ? "default" : "outline"}
-                  size="sm"
-                  className="h-8 text-xs"
-                  onClick={() => setReportType(opt.value)}
-                >
-                  {opt.label}
-                </Button>
-              ))}
+              {/* 2. Variável */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Variável</span>
+                <Popover open={variableDropdownOpen} onOpenChange={setVariableDropdownOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 text-xs w-52 justify-between">
+                      {selectedVariable ? VARIABLE_OPTIONS.find(v => v.value === selectedVariable)?.label ?? "Selecionar" : "Selecionar variável"}
+                      <ChevronDown className="h-3 w-3 ml-1" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-1" align="start">
+                    <div className="space-y-0.5">
+                      {VARIABLE_OPTIONS.map(v => (
+                        <button
+                          key={v.value}
+                          onClick={() => {
+                            setSelectedVariable(v.value);
+                            setSelectedValues([]);
+                            setVariableDropdownOpen(false);
+                          }}
+                          className={`w-full text-left text-xs px-2 py-1.5 rounded transition-colors ${selectedVariable === v.value ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"}`}
+                        >
+                          {v.label}
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Sub-values selection */}
+                {selectedVariable && (
+                  <Popover open={valuesDropdownOpen} onOpenChange={setValuesDropdownOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-7 text-xs w-52 justify-between mt-1">
+                        {selectedValues.length > 0 ? `${selectedValues.length} selecionado(s)` : "Selecionar valores"}
+                        <ChevronDown className="h-3 w-3 ml-1" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-2 max-h-60 overflow-y-auto" align="start">
+                      <div className="space-y-1">
+                        {availableValues.map(val => (
+                          <label key={val} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted rounded px-1.5 py-1">
+                            <Checkbox
+                              checked={selectedValues.includes(val)}
+                              onCheckedChange={() => toggleValue(val)}
+                              className="h-3.5 w-3.5"
+                            />
+                            <span className="text-foreground">{valueLabelMap[val] ?? val}</span>
+                          </label>
+                        ))}
+                        {availableValues.length === 0 && (
+                          <p className="text-xs text-muted-foreground py-2 text-center">Nenhum valor disponível</p>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
+
+              {/* 3. Fase */}
+              <div className="space-y-1.5">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Fase</span>
+                <Popover open={phaseDropdownOpen} onOpenChange={setPhaseDropdownOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 text-xs w-44 justify-between">
+                      {selectedPhases.length > 0 ? `${selectedPhases.length} fase(s)` : "Todas as fases"}
+                      <ChevronDown className="h-3 w-3 ml-1" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-2 max-h-60 overflow-y-auto" align="start">
+                    <div className="space-y-1">
+                      {(phases ?? []).map(phase => (
+                        <label key={phase.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted rounded px-1.5 py-1">
+                          <Checkbox
+                            checked={selectedPhases.includes(phase.id)}
+                            onCheckedChange={() => togglePhase(phase.id)}
+                            className="h-3.5 w-3.5"
+                          />
+                          <span className="text-foreground">{phase.title}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
             {/* Save button */}
-            <div className="flex items-center gap-2">
+            <div>
               <Button size="sm" className="h-8 text-xs" onClick={handleSave} disabled={updateReport.isPending}>
                 <Save className="h-3 w-3 mr-1" />
                 Salvar configuração
               </Button>
             </div>
 
-            {/* Report table */}
+            {/* Results */}
             <ReportContent
-              reportType={reportType}
               periodPreset={periodPreset}
               customStart={periodPreset === "custom" && customStart ? format(customStart, "yyyy-MM-dd") : null}
               customEnd={periodPreset === "custom" && customEnd ? format(customEnd, "yyyy-MM-dd") : null}
+              selectedVariable={selectedVariable || null}
+              selectedValues={selectedValues}
+              selectedPhases={selectedPhases}
             />
           </div>
         )}

@@ -5,10 +5,12 @@ export interface SavedReport {
   id: string;
   user_id: string;
   name: string;
-  report_type: string;
   period_preset: string;
   custom_start: string | null;
   custom_end: string | null;
+  selected_variable: string | null;
+  selected_values: string[];
+  selected_phases: number[];
   created_at: string;
   updated_at: string;
 }
@@ -22,7 +24,7 @@ export function useSavedReports() {
         .select("*")
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as SavedReport[];
+      return (data ?? []) as unknown as SavedReport[];
     },
   });
 }
@@ -39,7 +41,7 @@ export function useCreateSavedReport() {
         .select()
         .single();
       if (error) throw error;
-      return data as SavedReport;
+      return data as unknown as SavedReport;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["saved-reports"] });
@@ -50,10 +52,10 @@ export function useCreateSavedReport() {
 export function useUpdateSavedReport() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Omit<SavedReport, "id" | "user_id" | "created_at">> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Record<string, unknown> }) => {
       const { error } = await supabase
         .from("saved_reports")
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...updates, updated_at: new Date().toISOString() } as any)
         .eq("id", id);
       if (error) throw error;
     },
