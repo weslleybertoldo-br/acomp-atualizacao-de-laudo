@@ -189,6 +189,42 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_reports: {
+        Row: {
+          created_at: string
+          custom_end: string | null
+          custom_start: string | null
+          id: string
+          name: string
+          period_preset: string
+          report_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_end?: string | null
+          custom_start?: string | null
+          id?: string
+          name?: string
+          period_preset?: string
+          report_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_end?: string | null
+          custom_start?: string | null
+          id?: string
+          name?: string
+          period_preset?: string
+          report_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
