@@ -185,9 +185,7 @@ export function KanbanBoard() {
             onCardClick={(card, phaseId) => setSelectedCardInfo({ cardId: card.id, phaseId })}
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            Relatórios em breve.
-          </div>
+          <KanbanReports />
         )}
       </div>
 
