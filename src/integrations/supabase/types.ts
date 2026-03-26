@@ -197,7 +197,9 @@ export type Database = {
           id: string
           name: string
           period_preset: string
-          report_type: string
+          selected_phases: number[] | null
+          selected_values: string[] | null
+          selected_variable: string | null
           updated_at: string
           user_id: string
         }
@@ -208,7 +210,9 @@ export type Database = {
           id?: string
           name?: string
           period_preset?: string
-          report_type?: string
+          selected_phases?: number[] | null
+          selected_values?: string[] | null
+          selected_variable?: string | null
           updated_at?: string
           user_id: string
         }
@@ -219,7 +223,9 @@ export type Database = {
           id?: string
           name?: string
           period_preset?: string
-          report_type?: string
+          selected_phases?: number[] | null
+          selected_values?: string[] | null
+          selected_variable?: string | null
           updated_at?: string
           user_id?: string
         }
