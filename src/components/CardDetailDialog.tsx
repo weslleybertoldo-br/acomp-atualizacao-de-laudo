@@ -701,7 +701,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                           { commentId: c.id, cardId: card.id },
                           { onSuccess: () => toast.success("Comentário excluído!"), onError: () => toast.error("Erro ao excluir.") }
                         )}
-                        className="opacity-0 group-hover/comment:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-opacity shrink-0"
+                        className="p-1 text-muted-foreground hover:text-destructive shrink-0"
                         title="Excluir comentário"
                       >
                         <Trash2 className="h-3 w-3" />
