@@ -50,7 +50,7 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
       cards = cards.filter(card => selectedPhases.includes(card.phaseId));
     }
 
-    // 3. Filter by selected variable values
+    // 3. Filter by selected variable values (only when values are explicitly selected)
     if (selectedVariable && selectedValues.length > 0) {
       cards = cards.filter(card => {
         switch (selectedVariable) {
