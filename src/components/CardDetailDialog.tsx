@@ -135,10 +135,10 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   };
 
   const openExternalLink = (url: string) => {
-    const popup = window.open("about:blank", "_blank", "noopener,noreferrer");
+    const popup = window.open("", "_blank");
     if (popup) {
-      popup.opener = null;
-      popup.location.href = url;
+      popup.focus();
+      popup.location.assign(url);
       return;
     }
 
