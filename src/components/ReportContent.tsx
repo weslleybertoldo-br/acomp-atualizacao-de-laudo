@@ -107,12 +107,12 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
       }
     }
     return Object.entries(map).sort((a, b) => b[1].length - a[1].length);
-  }, [selectedVariable, selectedValues, filteredCards, hasAnyFilter]);
+  }, [selectedVariable, selectedValues, filteredCards, hasVariableFilter]);
 
-  if (!hasAnyFilter) {
+  if (!hasVariableFilter) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        <p className="text-sm">Selecione pelo menos um filtro acima para visualizar os cards.</p>
+        <p className="text-sm">Selecione uma variável e seus valores para visualizar os cards.</p>
       </div>
     );
   }
