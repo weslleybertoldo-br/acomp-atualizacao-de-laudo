@@ -207,7 +207,7 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
                             CARDs
                           </button>
                         </HoverCardTrigger>
-                        <HoverCardContent className="w-64 p-3" align="start">
+                        <HoverCardContent className="w-64 p-3 max-h-60 overflow-y-auto" align="start">
                           <div className="space-y-1.5">
                             <span className="text-xs font-semibold text-foreground">{cards.length} card(s)</span>
                             {cards.map(c => (
