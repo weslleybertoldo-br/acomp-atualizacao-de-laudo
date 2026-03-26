@@ -598,7 +598,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                           { onSuccess: () => toast.success("Link removido!") }
                         );
                       }}
-                      className="opacity-0 group-hover/link:opacity-100 p-0.5 text-muted-foreground hover:text-destructive transition-opacity shrink-0"
+                      className="p-0.5 text-muted-foreground hover:text-destructive shrink-0"
                     >
                       <X className="h-3 w-3" />
                     </button>
