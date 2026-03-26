@@ -39,6 +39,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   const [newPersonName, setNewPersonName] = useState("");
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0]);
+  const [newDriveLink, setNewDriveLink] = useState("");
   const moveCard = useMoveCard();
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
