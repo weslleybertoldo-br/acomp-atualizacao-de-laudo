@@ -158,7 +158,7 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
             <tr className="bg-muted/50 border-b border-border">
               <th className="text-left px-4 py-2.5 font-semibold text-foreground">Grupo</th>
               <th className="text-center px-4 py-2.5 font-semibold text-foreground w-24">Cards</th>
-              <th className="text-left px-4 py-2.5 font-semibold text-foreground">Códigos</th>
+              <th className="text-left px-4 py-2.5 font-semibold text-foreground w-32">Códigos</th>
             </tr>
           </thead>
           <tbody>
@@ -172,7 +172,7 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
               groupedData.map(([groupName, cards]) => {
                 const personData = showPersonAvatar ? getPersonAvatar(groupName) : null;
                 return (
-                  <tr key={groupName} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors">
+                  <tr key={groupName} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors group/row">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {personData && (
@@ -191,8 +191,9 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
                         {cards.length}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
+                    <td className="px-4 py-3 relative">
+                      <span className="text-xs text-muted-foreground font-medium group-hover/row:hidden">CARDs</span>
+                      <div className="hidden group-hover/row:flex flex-wrap gap-1">
                         {cards.map(c => (
                           <span key={c.id} className="text-xs bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded font-mono">
                             {c.code}
