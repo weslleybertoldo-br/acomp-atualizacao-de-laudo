@@ -134,6 +134,17 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
+  const openExternalLink = (url: string) => {
+    const popup = window.open("about:blank", "_blank", "noopener,noreferrer");
+    if (popup) {
+      popup.opener = null;
+      popup.location.href = url;
+      return;
+    }
+
+    toast.error("Não foi possível abrir o link automaticamente.");
+  };
+
   return (
     <Dialog open={!!card} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
@@ -584,7 +595,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                     <LinkIcon className="h-3 w-3 text-muted-foreground shrink-0" />
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); window.open(link, "_top"); }}
+                      onClick={(e) => { e.stopPropagation(); openExternalLink(link); }}
                       className="text-xs text-primary underline hover:text-primary/80 truncate flex-1 text-left cursor-pointer"
                     >
                       {link}
@@ -700,7 +711,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                     <p className="text-foreground/80 pl-9 whitespace-pre-wrap break-words">
                       {c.content.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
                         /^https?:\/\//.test(part) ? (
-                          <button key={i} type="button" onClick={(e) => { e.stopPropagation(); window.open(part, "_top"); }} className="text-primary underline hover:text-primary/80 break-all cursor-pointer inline">{part}</button>
+                          <button key={i} type="button" onClick={(e) => { e.stopPropagation(); openExternalLink(part); }} className="text-primary underline hover:text-primary/80 break-all cursor-pointer inline">{part}</button>
                         ) : part
                       )}
                     </p>
