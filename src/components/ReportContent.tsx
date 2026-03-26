@@ -38,8 +38,9 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
     // 1. Filter by time period
     if (dateRange) {
       cards = cards.filter(card => {
-        if (!card.dueDate) return true;
-        const d = new Date(card.dueDate);
+        const dateStr = card.createdAt;
+        if (!dateStr) return true;
+        const d = new Date(dateStr);
         return !isBefore(d, dateRange.start) && !isAfter(d, dateRange.end);
       });
     }
