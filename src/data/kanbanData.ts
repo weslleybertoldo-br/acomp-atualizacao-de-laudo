@@ -14,7 +14,6 @@ export interface KanbanCard {
   driveLinks?: string[];
   createdAt?: string;
 }
-  createdAt?: string;
 
 export interface KanbanPhase {
   id: number;
