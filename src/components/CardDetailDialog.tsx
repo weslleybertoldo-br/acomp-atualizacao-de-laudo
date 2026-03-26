@@ -595,7 +595,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                     <LinkIcon className="h-3 w-3 text-muted-foreground shrink-0" />
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); window.open(link, "_top"); }}
+                      onClick={(e) => { e.stopPropagation(); openExternalLink(link); }}
                       className="text-xs text-primary underline hover:text-primary/80 truncate flex-1 text-left cursor-pointer"
                     >
                       {link}
