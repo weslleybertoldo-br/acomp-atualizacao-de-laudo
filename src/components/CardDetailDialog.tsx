@@ -135,14 +135,14 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   };
 
   const openExternalLink = (url: string) => {
-    const popup = window.open("", "_blank");
-    if (popup) {
-      popup.focus();
-      popup.location.assign(url);
-      return;
-    }
-
-    toast.error("Não foi possível abrir o link automaticamente.");
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
   };
 
   return (
