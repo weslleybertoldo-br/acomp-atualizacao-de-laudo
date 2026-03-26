@@ -587,9 +587,9 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
             {(card.driveLinks ?? []).length > 0 && (
               <div className="space-y-1">
                 {(card.driveLinks ?? []).map((link, i) => (
-                  <div key={i} className="flex items-center gap-1.5 group/link min-w-0">
-                    <LinkIcon className="h-3 w-3 text-muted-foreground shrink-0" />
-                    <span className="text-xs text-primary truncate flex-1 min-w-0">{link}</span>
+                  <div key={i} className="flex items-start gap-1.5 group/link min-w-0">
+                    <LinkIcon className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                    <span className="text-xs text-primary break-all flex-1 min-w-0">{link}</span>
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); copyToClipboard(link); }}
