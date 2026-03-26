@@ -133,6 +133,9 @@ export function useKanbanData() {
             comments: countMap[c.id] || 0,
             attachments: c.attachments,
             tags: c.tags ?? [],
+            updateResponsible: c.update_responsible ?? "",
+            sapronAdded: c.sapron_added ?? false,
+            driveLinks: c.drive_links ?? [],
           })),
       }));
     },
