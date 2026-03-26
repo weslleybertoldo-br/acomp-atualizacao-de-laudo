@@ -3,6 +3,7 @@ import { useKanbanData, useKanbanRealtime, useBulkDeleteCards } from "@/hooks/us
 import { useAuth } from "@/hooks/useAuth";
 import { KanbanColumn } from "./KanbanColumn";
 import { KanbanListView } from "./KanbanListView";
+import { KanbanReports } from "./KanbanReports";
 import { CreateCardDialog } from "./CreateCardDialog";
 import { CardDetailDialog } from "./CardDetailDialog";
 import { FilterPopover, type KanbanFilters, emptyFilters, applyFilters } from "./FilterPopover";
