@@ -73,46 +73,66 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
     return cards;
   }, [allCards, dateRange, selectedPhases, selectedVariable, selectedValues]);
 
-  // Require at least a variable with values selected to show cards
+  // Show cards when ANY filter is active
+  const hasAnyFilter = !!dateRange || selectedPhases.length > 0 || !!(selectedVariable && selectedValues.length > 0);
   const hasVariableFilter = !!(selectedVariable && selectedValues.length > 0);
 
   const getPersonAvatar = (name: string) => {
     return (people ?? []).find(p => p.name === name);
   };
 
-  // Group by variable — only show data when variable+values are selected
+  // Group data: by variable if selected, otherwise by phase, otherwise flat list
   const groupedData = useMemo(() => {
-    if (!hasVariableFilter) return [];
+    if (!hasAnyFilter) return [];
 
-    const map: Record<string, typeof filteredCards> = {};
-    for (const card of filteredCards) {
-      let keys: string[] = [];
-      switch (selectedVariable) {
-        case "responsavel_atualizacao":
-          keys = [card.updateResponsible || "(Sem responsável)"];
-          break;
-        case "responsavel":
-          keys = [card.responsible || "(Sem responsável)"];
-          break;
-        case "tag":
-          keys = (!card.tags || card.tags.length === 0) ? ["(Sem tag)"] : card.tags.filter(t => selectedValues.includes(t));
-          break;
-        case "sapron":
-          keys = [card.sapronAdded ? "Marcado na Sapron" : "Não marcado na Sapron"];
-          break;
+    if (hasVariableFilter) {
+      const map: Record<string, typeof filteredCards> = {};
+      for (const card of filteredCards) {
+        let keys: string[] = [];
+        switch (selectedVariable) {
+          case "responsavel_atualizacao":
+            keys = [card.updateResponsible || "(Sem responsável)"];
+            break;
+          case "responsavel":
+            keys = [card.responsible || "(Sem responsável)"];
+            break;
+          case "tag":
+            keys = (!card.tags || card.tags.length === 0) ? ["(Sem tag)"] : card.tags.filter(t => selectedValues.includes(t));
+            break;
+          case "sapron":
+            keys = [card.sapronAdded ? "Marcado na Sapron" : "Não marcado na Sapron"];
+            break;
+        }
+        for (const key of keys) {
+          if (!map[key]) map[key] = [];
+          map[key].push(card);
+        }
       }
-      for (const key of keys) {
+      return Object.entries(map).sort((a, b) => b[1].length - a[1].length);
+    }
+
+    // Group by phase if phases selected, otherwise flat
+    if (selectedPhases.length > 0) {
+      const map: Record<string, typeof filteredCards> = {};
+      for (const card of filteredCards) {
+        const key = card.phaseTitle;
         if (!map[key]) map[key] = [];
         map[key].push(card);
       }
+      return Object.entries(map).sort((a, b) => {
+        const phaseA = a[1][0]?.phaseId ?? 0;
+        const phaseB = b[1][0]?.phaseId ?? 0;
+        return phaseA - phaseB;
+      });
     }
-    return Object.entries(map).sort((a, b) => b[1].length - a[1].length);
-  }, [selectedVariable, selectedValues, filteredCards, hasVariableFilter]);
 
-  if (!hasVariableFilter) {
+    return [["Todos os cards", filteredCards] as [string, typeof filteredCards]];
+  }, [selectedVariable, selectedValues, filteredCards, hasAnyFilter, hasVariableFilter, selectedPhases]);
+
+  if (!hasAnyFilter) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        <p className="text-sm">Selecione uma variável e seus valores para visualizar os cards.</p>
+        <p className="text-sm">Selecione pelo menos um filtro para visualizar os cards.</p>
       </div>
     );
   }
