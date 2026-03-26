@@ -50,7 +50,7 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
       cards = cards.filter(card => selectedPhases.includes(card.phaseId));
     }
 
-    // 3. Filter by selected variable values
+    // 3. Filter by selected variable values (only when values are explicitly selected)
     if (selectedVariable && selectedValues.length > 0) {
       cards = cards.filter(card => {
         switch (selectedVariable) {
@@ -75,8 +75,8 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
   }, [allCards, dateRange, selectedPhases, selectedVariable, selectedValues]);
 
   // Show cards when ANY filter is active
-  const hasAnyFilter = !!dateRange || selectedPhases.length > 0 || !!(selectedVariable && selectedValues.length > 0);
-  const hasVariableFilter = !!(selectedVariable && selectedValues.length > 0);
+  const hasAnyFilter = !!dateRange || selectedPhases.length > 0 || !!selectedVariable;
+  const hasVariableFilter = !!selectedVariable;
 
   const getPersonAvatar = (name: string) => {
     return (people ?? []).find(p => p.name === name);
@@ -98,7 +98,7 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
             keys = [card.responsible || "(Sem responsável)"];
             break;
           case "tag":
-            keys = (!card.tags || card.tags.length === 0) ? ["(Sem tag)"] : card.tags.filter(t => selectedValues.includes(t));
+            keys = (!card.tags || card.tags.length === 0) ? ["(Sem tag)"] : [...card.tags];
             break;
           case "sapron":
             keys = [card.sapronAdded ? "Marcado na Sapron" : "Não marcado na Sapron"];
