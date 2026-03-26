@@ -75,8 +75,8 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
   }, [allCards, dateRange, selectedPhases, selectedVariable, selectedValues]);
 
   // Show cards when ANY filter is active
-  const hasAnyFilter = !!dateRange || selectedPhases.length > 0 || !!(selectedVariable && selectedValues.length > 0);
-  const hasVariableFilter = !!(selectedVariable && selectedValues.length > 0);
+  const hasAnyFilter = !!dateRange || selectedPhases.length > 0 || !!selectedVariable;
+  const hasVariableFilter = !!selectedVariable;
 
   const getPersonAvatar = (name: string) => {
     return (people ?? []).find(p => p.name === name);
