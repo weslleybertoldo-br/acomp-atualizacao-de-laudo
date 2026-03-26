@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, User, Check, Link as LinkIcon, ExternalLink } from "lucide-react";
+import { ArrowLeft, ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, User, Check, Link as LinkIcon, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { KanbanCard } from "@/data/kanbanData";
 import {
@@ -134,20 +134,16 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
-  const openExternalLink = (url: string) => {
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.target = "_blank";
-    anchor.rel = "noopener noreferrer";
-    anchor.style.display = "none";
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url).then(
+      () => toast.success("Link copiado!"),
+      () => toast.error("Erro ao copiar link.")
+    );
   };
 
   return (
     <Dialog open={!!card} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             {editingCode ? (
@@ -591,14 +587,16 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
             {(card.driveLinks ?? []).length > 0 && (
               <div className="space-y-1">
                 {(card.driveLinks ?? []).map((link, i) => (
-                  <div key={i} className="flex items-center gap-1.5 group/link">
+                  <div key={i} className="flex items-center gap-1.5 group/link min-w-0">
                     <LinkIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="text-xs text-primary truncate flex-1 min-w-0">{link}</span>
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); openExternalLink(link); }}
-                      className="text-xs text-primary underline hover:text-primary/80 truncate flex-1 text-left cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); copyToClipboard(link); }}
+                      className="opacity-0 group-hover/link:opacity-100 p-0.5 text-muted-foreground hover:text-primary transition-opacity shrink-0"
+                      title="Copiar link"
                     >
-                      {link}
+                      <Copy className="h-3 w-3" />
                     </button>
                     <button
                       onClick={() => {
@@ -610,6 +608,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                         );
                       }}
                       className="p-0.5 text-muted-foreground hover:text-destructive shrink-0"
+                      title="Excluir link"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -711,7 +710,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                     <p className="text-foreground/80 pl-9 whitespace-pre-wrap break-words">
                       {c.content.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
                         /^https?:\/\//.test(part) ? (
-                          <button key={i} type="button" onClick={(e) => { e.stopPropagation(); openExternalLink(part); }} className="text-primary underline hover:text-primary/80 break-all cursor-pointer inline">{part}</button>
+                          <button key={i} type="button" onClick={(e) => { e.stopPropagation(); copyToClipboard(part); }} className="text-primary underline hover:text-primary/80 break-all cursor-pointer inline" title="Clique para copiar">{part}</button>
                         ) : part
                       )}
                     </p>
