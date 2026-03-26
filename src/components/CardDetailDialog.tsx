@@ -134,15 +134,11 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
-  const openExternalLink = (url: string) => {
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.target = "_blank";
-    anchor.rel = "noopener noreferrer";
-    anchor.style.display = "none";
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url).then(
+      () => toast.success("Link copiado!"),
+      () => toast.error("Erro ao copiar link.")
+    );
   };
 
   return (
