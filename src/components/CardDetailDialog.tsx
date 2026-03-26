@@ -143,7 +143,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
 
   return (
     <Dialog open={!!card} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             {editingCode ? (
