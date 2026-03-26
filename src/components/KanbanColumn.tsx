@@ -1,4 +1,5 @@
-import { Plus } from "lucide-react";
+import { useState } from "react";
+import { Plus, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import type { KanbanPhase, KanbanCard } from "@/data/kanbanData";
 import { KanbanCardItem } from "./KanbanCard";
 
@@ -11,6 +12,8 @@ const phaseAccentClasses: Record<number, string> = {
   5: "border-t-phase-5",
 };
 
+type SortOrder = "oldest" | "newest";
+
 interface KanbanColumnProps {
   phase: KanbanPhase;
   onCardClick: (card: KanbanCard) => void;
@@ -20,6 +23,14 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ phase, onCardClick, selectionMode, selectedCardIds, onToggleCard }: KanbanColumnProps) {
+  const [sortOrder, setSortOrder] = useState<SortOrder>("oldest");
+
+  const sortedCards = [...phase.cards].sort((a, b) => {
+    const dateA = new Date(a.createdAt || "").getTime();
+    const dateB = new Date(b.createdAt || "").getTime();
+    return sortOrder === "oldest" ? dateA - dateB : dateB - dateA;
+  });
+
   return (
     <div
       className={`flex flex-col min-w-[300px] max-w-[320px] rounded-xl bg-secondary/50 border border-border border-t-[3px] ${phaseAccentClasses[phase.id] ?? "border-t-primary"}`}
@@ -32,19 +43,28 @@ export function KanbanColumn({ phase, onCardClick, selectionMode, selectedCardId
             {phase.cards.length}
           </span>
         </div>
-        <button className="p-1 rounded hover:bg-secondary text-muted-foreground transition-colors">
-          <Plus className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setSortOrder(prev => prev === "oldest" ? "newest" : "oldest")}
+            className="p-1 rounded hover:bg-secondary text-muted-foreground transition-colors"
+            title={sortOrder === "oldest" ? "Mais antigos primeiro" : "Mais novos primeiro"}
+          >
+            {sortOrder === "oldest" ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />}
+          </button>
+          <button className="p-1 rounded hover:bg-secondary text-muted-foreground transition-colors">
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       {/* Cards */}
       <div className="flex flex-col gap-2.5 px-3 pb-3 overflow-y-auto flex-1 max-h-[calc(100vh-180px)]">
-        {phase.cards.length === 0 ? (
+        {sortedCards.length === 0 ? (
           <p className="text-xs text-muted-foreground p-3">
             Nenhum card nesta fase.
           </p>
         ) : (
-          phase.cards.map((card) => (
+          sortedCards.map((card) => (
             <KanbanCardItem
               key={card.id}
               card={card}
