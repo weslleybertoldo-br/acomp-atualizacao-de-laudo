@@ -593,7 +593,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); copyToClipboard(link); }}
-                      className="opacity-0 group-hover/link:opacity-100 p-0.5 text-muted-foreground hover:text-primary transition-opacity shrink-0"
+                      className="p-0.5 text-muted-foreground hover:text-primary shrink-0"
                       title="Copiar link"
                     >
                       <Copy className="h-3 w-3" />
