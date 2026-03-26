@@ -587,14 +587,16 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
             {(card.driveLinks ?? []).length > 0 && (
               <div className="space-y-1">
                 {(card.driveLinks ?? []).map((link, i) => (
-                  <div key={i} className="flex items-center gap-1.5 group/link">
+                  <div key={i} className="flex items-center gap-1.5 group/link min-w-0">
                     <LinkIcon className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="text-xs text-primary truncate flex-1 min-w-0">{link}</span>
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); openExternalLink(link); }}
-                      className="text-xs text-primary underline hover:text-primary/80 truncate flex-1 text-left cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); copyToClipboard(link); }}
+                      className="opacity-0 group-hover/link:opacity-100 p-0.5 text-muted-foreground hover:text-primary transition-opacity shrink-0"
+                      title="Copiar link"
                     >
-                      {link}
+                      <Copy className="h-3 w-3" />
                     </button>
                     <button
                       onClick={() => {
@@ -606,6 +608,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                         );
                       }}
                       className="p-0.5 text-muted-foreground hover:text-destructive shrink-0"
+                      title="Excluir link"
                     >
                       <X className="h-3 w-3" />
                     </button>
