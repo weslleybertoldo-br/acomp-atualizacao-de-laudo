@@ -53,11 +53,7 @@ export function KanbanReports() {
   const [valuesDropdownOpen, setValuesDropdownOpen] = useState(false);
   const [phaseDropdownOpen, setPhaseDropdownOpen] = useState(false);
 
-  useEffect(() => {
-    if (savedReports && savedReports.length > 0 && !selectedReportId) {
-      loadReport(savedReports[0]);
-    }
-  }, [savedReports]);
+  // Don't auto-select any report on load
 
   const loadReport = (report: SavedReport) => {
     setSelectedReportId(report.id);
