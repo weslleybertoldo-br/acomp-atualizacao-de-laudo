@@ -134,6 +134,17 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
+  const openExternalLink = (url: string) => {
+    const popup = window.open("about:blank", "_blank", "noopener,noreferrer");
+    if (popup) {
+      popup.opener = null;
+      popup.location.href = url;
+      return;
+    }
+
+    toast.error("Não foi possível abrir o link automaticamente.");
+  };
+
   return (
     <Dialog open={!!card} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
