@@ -385,7 +385,11 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                             {p.name}
                           </button>
                           <button
-                            onClick={() => deletePerson.mutate(p.id, { onSuccess: () => toast.success("Pessoa removida da lista!") })}
+                            onClick={() => {
+                              if (window.confirm(`Certeza que deseja excluir "${p.name}" da lista?`)) {
+                                deletePerson.mutate(p.id, { onSuccess: () => toast.success("Pessoa removida da lista!") });
+                              }
+                            }}
                             className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive"
                           >
                             <Trash2 className="h-3 w-3" />
