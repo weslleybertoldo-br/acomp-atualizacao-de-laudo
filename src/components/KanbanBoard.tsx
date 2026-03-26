@@ -3,6 +3,7 @@ import { useKanbanData, useKanbanRealtime, useBulkDeleteCards } from "@/hooks/us
 import { useAuth } from "@/hooks/useAuth";
 import { KanbanColumn } from "./KanbanColumn";
 import { KanbanListView } from "./KanbanListView";
+import { KanbanReports } from "./KanbanReports";
 import { CreateCardDialog } from "./CreateCardDialog";
 import { CardDetailDialog } from "./CardDetailDialog";
 import { FilterPopover, type KanbanFilters, emptyFilters, applyFilters } from "./FilterPopover";
@@ -184,9 +185,7 @@ export function KanbanBoard() {
             onCardClick={(card, phaseId) => setSelectedCardInfo({ cardId: card.id, phaseId })}
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            Relatórios em breve.
-          </div>
+          <KanbanReports />
         )}
       </div>
 
