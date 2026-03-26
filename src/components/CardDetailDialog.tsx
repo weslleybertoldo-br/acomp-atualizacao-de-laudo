@@ -583,7 +583,8 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                   <div key={i} className="flex items-center gap-1.5 group/link">
                     <LinkIcon className="h-3 w-3 text-muted-foreground shrink-0" />
                     <button
-                      onClick={(e) => { e.stopPropagation(); window.open(link, '_blank', 'noopener,noreferrer'); }}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); window.open(link, "_top"); }}
                       className="text-xs text-primary underline hover:text-primary/80 truncate flex-1 text-left cursor-pointer"
                     >
                       {link}
@@ -699,7 +700,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                     <p className="text-foreground/80 pl-9 whitespace-pre-wrap break-words">
                       {c.content.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
                         /^https?:\/\//.test(part) ? (
-                          <button key={i} onClick={(e) => { e.stopPropagation(); window.open(part, '_blank', 'noopener,noreferrer'); }} className="text-primary underline hover:text-primary/80 break-all cursor-pointer inline">{part}</button>
+                          <button key={i} type="button" onClick={(e) => { e.stopPropagation(); window.open(part, "_top"); }} className="text-primary underline hover:text-primary/80 break-all cursor-pointer inline">{part}</button>
                         ) : part
                       )}
                     </p>
