@@ -196,23 +196,20 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
                     <td className="px-4 py-3">
                       <HoverCard openDelay={100} closeDelay={200}>
                         <HoverCardTrigger asChild>
-                          <span className="text-xs text-primary font-medium cursor-pointer hover:underline">CARDs</span>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(cards.map(c => c.code).join(", "));
+                              toast.success("Códigos copiados!");
+                            }}
+                            className="flex items-center gap-1 text-xs text-primary font-medium cursor-pointer hover:underline"
+                          >
+                            <Copy className="h-3 w-3" />
+                            CARDs
+                          </button>
                         </HoverCardTrigger>
                         <HoverCardContent className="w-64 p-3" align="start">
                           <div className="space-y-1.5">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-semibold text-foreground">{cards.length} card(s)</span>
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(cards.map(c => c.code).join(", "));
-                                  toast.success("Códigos copiados!");
-                                }}
-                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                              >
-                                <Copy className="h-3 w-3" />
-                                Copiar todos
-                              </button>
-                            </div>
+                            <span className="text-xs font-semibold text-foreground">{cards.length} card(s)</span>
                             {cards.map(c => (
                               <div key={c.id} className="flex items-center justify-between group/card">
                                 <span className="text-xs font-mono text-foreground">{c.code}</span>
