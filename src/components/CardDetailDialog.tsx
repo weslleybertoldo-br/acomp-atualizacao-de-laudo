@@ -582,15 +582,12 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                 {(card.driveLinks ?? []).map((link, i) => (
                   <div key={i} className="flex items-center gap-1.5 group/link">
                     <LinkIcon className="h-3 w-3 text-muted-foreground shrink-0" />
-                    <a
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-xs text-primary underline hover:text-primary/80 truncate flex-1"
+                    <button
+                      onClick={(e) => { e.stopPropagation(); window.open(link, '_blank', 'noopener,noreferrer'); }}
+                      className="text-xs text-primary underline hover:text-primary/80 truncate flex-1 text-left cursor-pointer"
                     >
                       {link}
-                    </a>
+                    </button>
                     <button
                       onClick={() => {
                         const currentLinks = card.driveLinks ?? [];
