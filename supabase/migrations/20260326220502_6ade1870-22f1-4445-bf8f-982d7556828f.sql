@@ -1,0 +1,1 @@
+ALTER TABLE public.saved_reports ALTER COLUMN period_preset SET DEFAULT '';
