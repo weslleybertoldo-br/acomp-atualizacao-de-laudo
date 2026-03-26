@@ -61,15 +61,18 @@ export type Database = {
           code: string
           comments: number
           created_at: string
+          drive_links: string[]
           due_date: string | null
           due_label: string | null
           id: string
           phase_id: number
           responsible: string
+          sapron_added: boolean
           sort_order: number
           status: string
           status_label: string | null
           tags: string[]
+          update_responsible: string | null
           updated_at: string
         }
         Insert: {
@@ -77,15 +80,18 @@ export type Database = {
           code: string
           comments?: number
           created_at?: string
+          drive_links?: string[]
           due_date?: string | null
           due_label?: string | null
           id?: string
           phase_id: number
           responsible: string
+          sapron_added?: boolean
           sort_order?: number
           status?: string
           status_label?: string | null
           tags?: string[]
+          update_responsible?: string | null
           updated_at?: string
         }
         Update: {
@@ -93,15 +99,18 @@ export type Database = {
           code?: string
           comments?: number
           created_at?: string
+          drive_links?: string[]
           due_date?: string | null
           due_label?: string | null
           id?: string
           phase_id?: number
           responsible?: string
+          sapron_added?: boolean
           sort_order?: number
           status?: string
           status_label?: string | null
           tags?: string[]
+          update_responsible?: string | null
           updated_at?: string
         }
         Relationships: [
