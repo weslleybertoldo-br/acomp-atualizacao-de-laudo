@@ -13,6 +13,8 @@ export interface KanbanCard {
   sapronAdded?: boolean;
   driveLinks?: string[];
   createdAt?: string;
+}
+  createdAt?: string;
 
 export interface KanbanPhase {
   id: number;
