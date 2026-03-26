@@ -98,7 +98,7 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
             keys = [card.responsible || "(Sem responsável)"];
             break;
           case "tag":
-            keys = (!card.tags || card.tags.length === 0) ? ["(Sem tag)"] : card.tags.filter(t => selectedValues.includes(t));
+            keys = (!card.tags || card.tags.length === 0) ? ["(Sem tag)"] : [...card.tags];
             break;
           case "sapron":
             keys = [card.sapronAdded ? "Marcado na Sapron" : "Não marcado na Sapron"];
