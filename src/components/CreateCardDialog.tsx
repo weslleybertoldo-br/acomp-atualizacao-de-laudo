@@ -69,6 +69,11 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
               onChange={(e) => setSingleCode(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreateSingle()}
             />
+            <Input
+              placeholder="Link do Drive (opcional)"
+              value={driveLink}
+              onChange={(e) => setDriveLink(e.target.value)}
+            />
             <p className="text-[10px] text-muted-foreground">
               Formato com data: <span className="font-mono">16/2HFO1001</span> → código HFO1001, enviado dia 16/02
             </p>
