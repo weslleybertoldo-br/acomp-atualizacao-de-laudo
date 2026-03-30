@@ -15,7 +15,9 @@ interface CreateCardDialogProps {
 export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) {
   const [singleCode, setSingleCode] = useState("");
   const [driveLink, setDriveLink] = useState("");
+  const [exceptions, setExceptions] = useState("");
   const [multiCodes, setMultiCodes] = useState("");
+  const [multiExceptions, setMultiExceptions] = useState("");
   const createCards = useCreateCards();
 
   const handleCreateSingle = () => {
