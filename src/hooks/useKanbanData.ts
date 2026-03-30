@@ -163,6 +163,7 @@ export function useCreateCards() {
           due_label: label,
           sort_order: i,
           drive_links: input.driveLinks ?? [],
+          exceptions: input.exceptions ?? "",
         };
       });
 
