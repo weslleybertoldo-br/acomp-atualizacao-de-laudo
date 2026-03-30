@@ -1,0 +1,1 @@
+ALTER TABLE public.kanban_cards ADD COLUMN exceptions text NOT NULL DEFAULT '';
