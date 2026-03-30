@@ -39,7 +39,7 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
       .map((c) => c.trim())
       .filter(Boolean);
     if (codes.length === 0) return;
-    createCards.mutate(codes, {
+    createCards.mutate(codes.map(raw => ({ raw, driveLinks: [] })), {
       onSuccess: () => {
         toast.success(`${codes.length} card(s) criado(s) com sucesso!`);
         setMultiCodes("");
