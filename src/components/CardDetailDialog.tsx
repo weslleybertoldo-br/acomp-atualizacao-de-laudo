@@ -12,7 +12,7 @@ import { ArrowLeft, ArrowRight, Send, Trash2, CalendarIcon, X, Plus, User, Check
 import { cn } from "@/lib/utils";
 import type { KanbanCard } from "@/data/kanbanData";
 import {
-  useMoveCard, useDeleteCard, useUpdateCard, useCardComments, useAddComment, useDeleteComment,
+  useMoveCard, useDeleteCard, useUpdateCard,
   useResponsiblePeople, useAddResponsiblePerson, useDeleteResponsiblePerson,
   useKanbanTags, useAddKanbanTag, useDeleteKanbanTag, buildDueLabel
 } from "@/hooks/useKanbanData";
