@@ -33,7 +33,6 @@ const TAG_COLORS = [
 ];
 
 export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChange }: CardDetailDialogProps) {
-  const [commentText, setCommentText] = useState("");
   const [editingCode, setEditingCode] = useState(false);
   const [codeText, setCodeText] = useState("");
   const [newPersonName, setNewPersonName] = useState("");
