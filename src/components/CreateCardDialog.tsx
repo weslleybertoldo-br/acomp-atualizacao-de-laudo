@@ -14,16 +14,19 @@ interface CreateCardDialogProps {
 
 export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) {
   const [singleCode, setSingleCode] = useState("");
+  const [driveLink, setDriveLink] = useState("");
   const [multiCodes, setMultiCodes] = useState("");
   const createCards = useCreateCards();
 
   const handleCreateSingle = () => {
     const code = singleCode.trim();
     if (!code) return;
-    createCards.mutate([code], {
+    const link = driveLink.trim();
+    createCards.mutate([{ raw: code, driveLinks: link ? [link] : [] }], {
       onSuccess: () => {
         toast.success("Card criado com sucesso!");
         setSingleCode("");
+        setDriveLink("");
         onOpenChange(false);
       },
       onError: () => toast.error("Erro ao criar card."),
@@ -36,7 +39,7 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
       .map((c) => c.trim())
       .filter(Boolean);
     if (codes.length === 0) return;
-    createCards.mutate(codes, {
+    createCards.mutate(codes.map(raw => ({ raw, driveLinks: [] })), {
       onSuccess: () => {
         toast.success(`${codes.length} card(s) criado(s) com sucesso!`);
         setMultiCodes("");
@@ -65,6 +68,11 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
               value={singleCode}
               onChange={(e) => setSingleCode(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreateSingle()}
+            />
+            <Input
+              placeholder="Link do Drive (opcional)"
+              value={driveLink}
+              onChange={(e) => setDriveLink(e.target.value)}
             />
             <p className="text-[10px] text-muted-foreground">
               Formato com data: <span className="font-mono">16/2HFO1001</span> → código HFO1001, enviado dia 16/02
