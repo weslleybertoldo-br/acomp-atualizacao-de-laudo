@@ -8,11 +8,11 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, ArrowRight, Send, Trash2, CalendarIcon, X, Plus, User, Check, Link as LinkIcon, Copy, Pencil } from "lucide-react";
+import { ArrowLeft, ArrowRight, MessageSquare, Send, Loader2, Trash2, CalendarIcon, X, Plus, User, Check, Link as LinkIcon, Copy, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { KanbanCard } from "@/data/kanbanData";
 import {
-  useMoveCard, useDeleteCard, useUpdateCard,
+  useMoveCard, useDeleteCard, useUpdateCard, useCardComments, useAddComment, useDeleteComment,
   useResponsiblePeople, useAddResponsiblePerson, useDeleteResponsiblePerson,
   useKanbanTags, useAddKanbanTag, useDeleteKanbanTag, buildDueLabel
 } from "@/hooks/useKanbanData";
@@ -33,6 +33,7 @@ const TAG_COLORS = [
 ];
 
 export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChange }: CardDetailDialogProps) {
+  const [commentText, setCommentText] = useState("");
   const [editingCode, setEditingCode] = useState(false);
   const [codeText, setCodeText] = useState("");
   const [newPersonName, setNewPersonName] = useState("");
@@ -42,12 +43,15 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   const moveCard = useMoveCard();
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
+  const addComment = useAddComment();
+  const deleteComment = useDeleteComment();
   const { data: people } = useResponsiblePeople();
   const addPerson = useAddResponsiblePerson();
   const deletePerson = useDeleteResponsiblePerson();
   const { data: allTags } = useKanbanTags();
   const addTag = useAddKanbanTag();
   const deleteTag = useDeleteKanbanTag();
+  const { data: comments, isLoading: loadingComments } = useCardComments(card?.id ?? "");
 
   if (!card) return null;
 
@@ -116,6 +120,17 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     updateCard.mutate(
       { cardId: card.id, updates: { tags: newTags } },
       { onSuccess: () => toast.success("Tags atualizadas!") }
+    );
+  };
+
+  const handleAddComment = () => {
+    if (!commentText.trim()) return;
+    addComment.mutate(
+      { cardId: card.id, content: commentText.trim() },
+      {
+        onSuccess: () => { setCommentText(""); toast.success("Comentário adicionado!"); },
+        onError: () => toast.error("Erro ao adicionar comentário."),
+      }
     );
   };
 
@@ -671,6 +686,83 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
               rows={4}
               className="text-xs"
             />
+          </div>
+
+          {/* Comments section */}
+          <Separator />
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold flex items-center gap-1.5">
+              <MessageSquare className="h-4 w-4" />
+              Comentários
+            </h4>
+
+            <div className="flex gap-2">
+              <Textarea
+                placeholder="Adicionar comentário..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                rows={2}
+                className="flex-1"
+              />
+              <Button
+                size="icon"
+                onClick={handleAddComment}
+                disabled={!commentText.trim() || addComment.isPending}
+                className="shrink-0 self-end"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {loadingComments ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : (comments ?? []).length === 0 ? (
+              <p className="text-xs text-muted-foreground py-2">Nenhum comentário ainda.</p>
+            ) : (
+              <div className="space-y-3 max-h-48 overflow-y-auto">
+                {(comments ?? []).map((c) => (
+                  <div key={c.id} className="rounded-lg bg-secondary p-3 text-sm space-y-1.5 group/comment">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-7 w-7 shrink-0">
+                        {(c as any).user_avatar ? (
+                          <AvatarImage src={(c as any).user_avatar} alt={c.user_name || "avatar"} />
+                        ) : null}
+                        <AvatarFallback className="text-[10px] font-bold bg-primary/20 text-primary">
+                          {(c.user_name || c.user_email || "?").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-foreground truncate">
+                          {c.user_name || c.user_email || "Usuário"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {format(new Date(c.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => deleteComment.mutate(
+                          { commentId: c.id, cardId: card.id },
+                          { onSuccess: () => toast.success("Comentário excluído!"), onError: () => toast.error("Erro ao excluir.") }
+                        )}
+                        className="p-1 text-muted-foreground hover:text-destructive shrink-0"
+                        title="Excluir comentário"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <p className="text-foreground/80 pl-9 whitespace-pre-wrap break-words">
+                      {c.content.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+                        /^https?:\/\//.test(part) ? (
+                          <button key={i} type="button" onClick={(e) => { e.stopPropagation(); copyToClipboard(part); }} className="text-primary underline hover:text-primary/80 break-all cursor-pointer inline" title="Clique para copiar">{part}</button>
+                        ) : part
+                      )}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Delete card */}
