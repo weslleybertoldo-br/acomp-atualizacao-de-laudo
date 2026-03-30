@@ -123,6 +123,17 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
     );
   };
 
+  const handleAddComment = () => {
+    if (!commentText.trim()) return;
+    addComment.mutate(
+      { cardId: card.id, content: commentText.trim() },
+      {
+        onSuccess: () => { setCommentText(""); toast.success("Comentário adicionado!"); },
+        onError: () => toast.error("Erro ao adicionar comentário."),
+      }
+    );
+  };
+
   const copyToClipboard = (url: string) => {
     navigator.clipboard.writeText(url).then(
       () => toast.success("Link copiado!"),
