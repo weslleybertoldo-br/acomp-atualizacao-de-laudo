@@ -148,7 +148,7 @@ export function useCreateCards() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (inputs: { raw: string; driveLinks?: string[] }[]) => {
+    mutationFn: async (inputs: { raw: string; driveLinks?: string[]; exceptions?: string }[]) => {
       const rows = inputs.map((input, i) => {
         const { code, date } = parseCardInput(input.raw);
         const dateStr = date || new Date().toISOString().split("T")[0];
