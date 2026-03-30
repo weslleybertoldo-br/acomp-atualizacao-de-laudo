@@ -147,9 +147,9 @@ export function useCreateCards() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (inputs: string[]) => {
-      const rows = inputs.map((raw, i) => {
-        const { code, date } = parseCardInput(raw);
+    mutationFn: async (inputs: { raw: string; driveLinks?: string[] }[]) => {
+      const rows = inputs.map((input, i) => {
+        const { code, date } = parseCardInput(input.raw);
         const dateStr = date || new Date().toISOString().split("T")[0];
         const label = date ? buildSentLabel(dateStr) : buildDueLabel(dateStr);
 
@@ -161,6 +161,7 @@ export function useCreateCards() {
           due_date: dateStr,
           due_label: label,
           sort_order: i,
+          drive_links: input.driveLinks ?? [],
         };
       });
 
