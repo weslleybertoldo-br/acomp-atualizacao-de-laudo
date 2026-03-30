@@ -43,10 +43,12 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
       .map((c) => c.trim())
       .filter(Boolean);
     if (codes.length === 0) return;
-    createCards.mutate(codes.map(raw => ({ raw, driveLinks: [] })), {
+    const exc = multiExceptions.trim();
+    createCards.mutate(codes.map(raw => ({ raw, driveLinks: [], exceptions: exc })), {
       onSuccess: () => {
         toast.success(`${codes.length} card(s) criado(s) com sucesso!`);
         setMultiCodes("");
+        setMultiExceptions("");
         onOpenChange(false);
       },
       onError: () => toast.error("Erro ao criar cards."),
