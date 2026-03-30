@@ -136,6 +136,7 @@ export function useKanbanData() {
             updateResponsible: c.update_responsible ?? "",
             sapronAdded: c.sapron_added ?? false,
             driveLinks: c.drive_links ?? [],
+            exceptions: (c as any).exceptions ?? "",
             createdAt: c.created_at,
           })),
       }));
