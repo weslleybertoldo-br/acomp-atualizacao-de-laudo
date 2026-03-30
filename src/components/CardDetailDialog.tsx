@@ -176,12 +176,15 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
                 </Button>
               </div>
             ) : (
-              <span
-                className="text-lg cursor-pointer hover:text-primary transition-colors"
-                onClick={() => { setCodeText(card.code); setEditingCode(true); }}
-                title="Clique para editar"
-              >
+              <span className="text-lg group/code inline-flex items-center gap-1">
                 {card.code}
+                <button
+                  className="opacity-0 group-hover/code:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
+                  onClick={() => { setCodeText(card.code); setEditingCode(true); }}
+                  title="Editar código"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
               </span>
             )}
             {/* Tags next to code */}
