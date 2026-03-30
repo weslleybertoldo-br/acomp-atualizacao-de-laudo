@@ -40,6 +40,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0]);
   const [newDriveLink, setNewDriveLink] = useState("");
+  const [newException, setNewException] = useState("");
   const moveCard = useMoveCard();
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
@@ -671,21 +672,71 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
             <span className="text-muted-foreground text-xs uppercase tracking-wide font-semibold">
               Exceções
             </span>
-            <Textarea
-              placeholder="Digite as exceções aqui..."
-              defaultValue={card.exceptions ?? ""}
-              onBlur={(e) => {
-                const val = e.target.value;
-                if (val !== (card.exceptions ?? "")) {
+            <div className="flex gap-1">
+              <Input
+                placeholder="Adicionar exceção..."
+                value={newException}
+                onChange={(e) => setNewException(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newException.trim()) {
+                    const current = card.exceptions ?? "";
+                    const items = current ? current.split("\n").filter(Boolean) : [];
+                    items.push(newException.trim());
+                    updateCard.mutate(
+                      { cardId: card.id, updates: { exceptions: items.join("\n") } },
+                      { onSuccess: () => { setNewException(""); toast.success("Exceção adicionada!"); } }
+                    );
+                  }
+                }}
+                className="h-8 text-xs"
+              />
+              <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => {
+                if (newException.trim()) {
+                  const current = card.exceptions ?? "";
+                  const items = current ? current.split("\n").filter(Boolean) : [];
+                  items.push(newException.trim());
                   updateCard.mutate(
-                    { cardId: card.id, updates: { exceptions: val } },
-                    { onSuccess: () => toast.success("Exceções atualizadas!") }
+                    { cardId: card.id, updates: { exceptions: items.join("\n") } },
+                    { onSuccess: () => { setNewException(""); toast.success("Exceção adicionada!"); } }
                   );
                 }
-              }}
-              rows={4}
-              className="text-xs"
-            />
+              }}>
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+            {(() => {
+              const items = (card.exceptions ?? "").split("\n").filter(Boolean);
+              return items.length > 0 ? (
+                <div className="space-y-1">
+                  {items.map((item, i) => (
+                    <div key={i} className="flex items-start gap-1.5 min-w-0">
+                      <span className="text-xs text-foreground break-all flex-1 min-w-0">{item}</span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); copyToClipboard(item); }}
+                        className="p-0.5 text-muted-foreground hover:text-primary shrink-0"
+                        title="Copiar exceção"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          const newItems = items.filter((_, idx) => idx !== i);
+                          updateCard.mutate(
+                            { cardId: card.id, updates: { exceptions: newItems.join("\n") } },
+                            { onSuccess: () => toast.success("Exceção removida!") }
+                          );
+                        }}
+                        className="p-0.5 text-muted-foreground hover:text-destructive shrink-0"
+                        title="Excluir exceção"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null;
+            })()}
           </div>
 
           {/* Comments section */}
