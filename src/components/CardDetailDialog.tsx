@@ -43,12 +43,15 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   const moveCard = useMoveCard();
   const deleteCard = useDeleteCard();
   const updateCard = useUpdateCard();
+  const addComment = useAddComment();
+  const deleteComment = useDeleteComment();
   const { data: people } = useResponsiblePeople();
   const addPerson = useAddResponsiblePerson();
   const deletePerson = useDeleteResponsiblePerson();
   const { data: allTags } = useKanbanTags();
   const addTag = useAddKanbanTag();
   const deleteTag = useDeleteKanbanTag();
+  const { data: comments, isLoading: loadingComments } = useCardComments(card?.id ?? "");
 
   if (!card) return null;
 
