@@ -12,6 +12,7 @@ export interface KanbanCard {
   updateResponsible?: string;
   sapronAdded?: boolean;
   driveLinks?: string[];
+  exceptions?: string;
   createdAt?: string;
 }
 

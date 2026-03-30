@@ -136,6 +136,7 @@ export function useKanbanData() {
             updateResponsible: c.update_responsible ?? "",
             sapronAdded: c.sapron_added ?? false,
             driveLinks: c.drive_links ?? [],
+            exceptions: (c as any).exceptions ?? "",
             createdAt: c.created_at,
           })),
       }));
@@ -147,7 +148,7 @@ export function useCreateCards() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (inputs: { raw: string; driveLinks?: string[] }[]) => {
+    mutationFn: async (inputs: { raw: string; driveLinks?: string[]; exceptions?: string }[]) => {
       const rows = inputs.map((input, i) => {
         const { code, date } = parseCardInput(input.raw);
         const dateStr = date || new Date().toISOString().split("T")[0];
@@ -162,6 +163,7 @@ export function useCreateCards() {
           due_label: label,
           sort_order: i,
           drive_links: input.driveLinks ?? [],
+          exceptions: input.exceptions ?? "",
         };
       });
 
@@ -234,7 +236,7 @@ export function useUpdateCard() {
       updates,
     }: {
       cardId: string;
-      updates: { due_date?: string | null; due_label?: string | null; tags?: string[]; responsible?: string; status_label?: string | null; code?: string; update_responsible?: string; sapron_added?: boolean; drive_links?: string[] };
+      updates: { due_date?: string | null; due_label?: string | null; tags?: string[]; responsible?: string; status_label?: string | null; code?: string; update_responsible?: string; sapron_added?: boolean; drive_links?: string[]; exceptions?: string };
     }) => {
       const { error } = await supabase
         .from("kanban_cards")

@@ -64,6 +64,7 @@ export type Database = {
           drive_links: string[]
           due_date: string | null
           due_label: string | null
+          exceptions: string
           id: string
           phase_id: number
           responsible: string
@@ -83,6 +84,7 @@ export type Database = {
           drive_links?: string[]
           due_date?: string | null
           due_label?: string | null
+          exceptions?: string
           id?: string
           phase_id: number
           responsible: string
@@ -102,6 +104,7 @@ export type Database = {
           drive_links?: string[]
           due_date?: string | null
           due_label?: string | null
+          exceptions?: string
           id?: string
           phase_id?: number
           responsible?: string

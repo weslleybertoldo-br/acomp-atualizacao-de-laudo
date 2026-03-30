@@ -15,18 +15,22 @@ interface CreateCardDialogProps {
 export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) {
   const [singleCode, setSingleCode] = useState("");
   const [driveLink, setDriveLink] = useState("");
+  const [exceptions, setExceptions] = useState("");
   const [multiCodes, setMultiCodes] = useState("");
+  const [multiExceptions, setMultiExceptions] = useState("");
   const createCards = useCreateCards();
 
   const handleCreateSingle = () => {
     const code = singleCode.trim();
     if (!code) return;
     const link = driveLink.trim();
-    createCards.mutate([{ raw: code, driveLinks: link ? [link] : [] }], {
+    const exc = exceptions.trim();
+    createCards.mutate([{ raw: code, driveLinks: link ? [link] : [], exceptions: exc }], {
       onSuccess: () => {
         toast.success("Card criado com sucesso!");
         setSingleCode("");
         setDriveLink("");
+        setExceptions("");
         onOpenChange(false);
       },
       onError: () => toast.error("Erro ao criar card."),
@@ -39,10 +43,12 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
       .map((c) => c.trim())
       .filter(Boolean);
     if (codes.length === 0) return;
-    createCards.mutate(codes.map(raw => ({ raw, driveLinks: [] })), {
+    const exc = multiExceptions.trim();
+    createCards.mutate(codes.map(raw => ({ raw, driveLinks: [], exceptions: exc })), {
       onSuccess: () => {
         toast.success(`${codes.length} card(s) criado(s) com sucesso!`);
         setMultiCodes("");
+        setMultiExceptions("");
         onOpenChange(false);
       },
       onError: () => toast.error("Erro ao criar cards."),
@@ -74,6 +80,12 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
               value={driveLink}
               onChange={(e) => setDriveLink(e.target.value)}
             />
+            <Textarea
+              placeholder="Exceções (opcional)"
+              value={exceptions}
+              onChange={(e) => setExceptions(e.target.value)}
+              rows={3}
+            />
             <p className="text-[10px] text-muted-foreground">
               Formato com data: <span className="font-mono">16/2HFO1001</span> → código HFO1001, enviado dia 16/02
             </p>
@@ -90,6 +102,12 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
               value={multiCodes}
               onChange={(e) => setMultiCodes(e.target.value)}
               rows={6}
+            />
+            <Textarea
+              placeholder="Exceções (opcional, aplicadas a todos os cards)"
+              value={multiExceptions}
+              onChange={(e) => setMultiExceptions(e.target.value)}
+              rows={3}
             />
             <p className="text-xs text-muted-foreground">
               {multiCodes.split("\n").filter((l) => l.trim()).length} card(s) serão criados na Fase 0.
