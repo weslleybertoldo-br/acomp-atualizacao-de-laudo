@@ -80,6 +80,12 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
               value={driveLink}
               onChange={(e) => setDriveLink(e.target.value)}
             />
+            <Textarea
+              placeholder="Exceções (opcional)"
+              value={exceptions}
+              onChange={(e) => setExceptions(e.target.value)}
+              rows={3}
+            />
             <p className="text-[10px] text-muted-foreground">
               Formato com data: <span className="font-mono">16/2HFO1001</span> → código HFO1001, enviado dia 16/02
             </p>
