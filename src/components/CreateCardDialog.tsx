@@ -21,10 +21,12 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
   const handleCreateSingle = () => {
     const code = singleCode.trim();
     if (!code) return;
-    createCards.mutate([code], {
+    const link = driveLink.trim();
+    createCards.mutate([{ raw: code, driveLinks: link ? [link] : [] }], {
       onSuccess: () => {
         toast.success("Card criado com sucesso!");
         setSingleCode("");
+        setDriveLink("");
         onOpenChange(false);
       },
       onError: () => toast.error("Erro ao criar card."),
