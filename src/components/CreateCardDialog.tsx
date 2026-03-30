@@ -103,6 +103,12 @@ export function CreateCardDialog({ open, onOpenChange }: CreateCardDialogProps) 
               onChange={(e) => setMultiCodes(e.target.value)}
               rows={6}
             />
+            <Textarea
+              placeholder="Exceções (opcional, aplicadas a todos os cards)"
+              value={multiExceptions}
+              onChange={(e) => setMultiExceptions(e.target.value)}
+              rows={3}
+            />
             <p className="text-xs text-muted-foreground">
               {multiCodes.split("\n").filter((l) => l.trim()).length} card(s) serão criados na Fase 0.
             </p>
