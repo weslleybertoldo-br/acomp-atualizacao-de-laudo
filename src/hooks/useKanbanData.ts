@@ -2,64 +2,149 @@ import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { KanbanCard, KanbanPhase } from "@/data/kanbanData";
-import { format } from "date-fns";
+import { addMonths, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-/** Get current date in Brasília timezone (UTC-3) as a Date at midnight UTC */
+type DateParts = {
+  year: number;
+  month: number;
+  day: number;
+};
+
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+function parseDateParts(dateStr: string): DateParts {
+  return {
+    year: Number(dateStr.slice(0, 4)),
+    month: Number(dateStr.slice(5, 7)),
+    day: Number(dateStr.slice(8, 10)),
+  };
+}
+
+function partsToUtcDate({ year, month, day }: DateParts): Date {
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function partsToLocalDate({ year, month, day }: DateParts): Date {
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+}
+
+function extractDateParts(date: Date): DateParts {
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1,
+    day: date.getDate(),
+  };
+}
+
+function compareDateParts(a: DateParts, b: DateParts): number {
+  if (a.year !== b.year) return a.year - b.year;
+  if (a.month !== b.month) return a.month - b.month;
+  return a.day - b.day;
+}
+
+function formatDatePartsToIso({ year, month, day }: DateParts): string {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function getBrasiliaTodayParts(): DateParts {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const values = Object.fromEntries(
+    formatter
+      .formatToParts(new Date())
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value])
+  ) as Record<string, string>;
+
+  return {
+    year: Number(values.year),
+    month: Number(values.month),
+    day: Number(values.day),
+  };
+}
+
+/** Get current date in Brasília timezone as a Date at midnight UTC */
 function getBrasiliaToday(): Date {
-  const now = new Date();
-  // Brasília is UTC-3
-  const brasiliaOffset = -3 * 60; // minutes
-  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-  const brasiliaMs = utcMs + brasiliaOffset * 60000;
-  const brasilia = new Date(brasiliaMs);
-  return new Date(Date.UTC(brasilia.getFullYear(), brasilia.getMonth(), brasilia.getDate()));
+  return partsToUtcDate(getBrasiliaTodayParts());
+}
+
+function getBrasiliaTodayString(): string {
+  return formatDatePartsToIso(getBrasiliaTodayParts());
+}
+
+function diffDatePartsInDays(start: DateParts, end: DateParts): number {
+  return Math.round((partsToUtcDate(end).getTime() - partsToUtcDate(start).getTime()) / DAY_MS);
+}
+
+function getMonthDayDistance(dateStr: string): { months: number; days: number } {
+  const target = parseDateParts(dateStr);
+  const today = getBrasiliaTodayParts();
+  const [earlier, later] = compareDateParts(target, today) <= 0 ? [target, today] : [today, target];
+
+  let months = (later.year - earlier.year) * 12 + (later.month - earlier.month);
+  let anchor = extractDateParts(addMonths(partsToLocalDate(earlier), months));
+
+  if (compareDateParts(anchor, later) > 0) {
+    months -= 1;
+    anchor = extractDateParts(addMonths(partsToLocalDate(earlier), months));
+  }
+
+  return {
+    months,
+    days: diffDatePartsInDays(anchor, later),
+  };
 }
 
 /** Calculate exact days difference between a date string and today in Brasília */
 function daysDiff(dateStr: string): number {
-  const date = new Date(Date.UTC(
-    parseInt(dateStr.slice(0, 4)),
-    parseInt(dateStr.slice(5, 7)) - 1,
-    parseInt(dateStr.slice(8, 10))
-  ));
+  const date = partsToUtcDate(parseDateParts(dateStr));
   const today = getBrasiliaToday();
-  return Math.round((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.round((today.getTime() - date.getTime()) / DAY_MS);
 }
 
-function formatDaysDistance(days: number): string {
+function formatDaysDistance(days: number, dateStr: string): string {
   const absDays = Math.abs(days);
   if (absDays === 0) return "hoje";
   if (absDays === 1) return days > 0 ? "há 1 dia" : "em 1 dia";
   if (absDays < 30) return days > 0 ? `há ${absDays} dias` : `em ${absDays} dias`;
-  const months = Math.floor(absDays / 30);
-  const remainDays = absDays % 30;
-  if (months === 1 && remainDays === 0) return days > 0 ? "há 1 mês" : "em 1 mês";
-  if (months === 1) return days > 0 ? `há 1 mês e ${remainDays} dia${remainDays > 1 ? "s" : ""}` : `em 1 mês e ${remainDays} dia${remainDays > 1 ? "s" : ""}`;
-  if (remainDays === 0) return days > 0 ? `há ${months} meses` : `em ${months} meses`;
-  return days > 0 ? `há ${months} meses e ${remainDays} dia${remainDays > 1 ? "s" : ""}` : `em ${months} meses e ${remainDays} dia${remainDays > 1 ? "s" : ""}`;
+
+  const { months, days: remainDays } = getMonthDayDistance(dateStr);
+  const monthLabel = months === 1 ? "1 mês" : `${months} meses`;
+
+  if (remainDays === 0) return days > 0 ? `há ${monthLabel}` : `em ${monthLabel}`;
+
+  return days > 0
+    ? `há ${monthLabel} e ${remainDays} dia${remainDays > 1 ? "s" : ""}`
+    : `em ${monthLabel} e ${remainDays} dia${remainDays > 1 ? "s" : ""}`;
+}
+
+function resolveDueLabel(dateStr: string | null, storedLabel: string | null): string {
+  if (!dateStr) return storedLabel ?? "";
+  return storedLabel?.startsWith("Enviado") ? buildSentLabel(dateStr) : buildDueLabel(dateStr);
 }
 
 export function buildDueLabel(dateStr: string): string {
-  const date = new Date(dateStr + "T00:00:00");
+  const date = partsToLocalDate(parseDateParts(dateStr));
   const day = format(date, "dd", { locale: ptBR });
   const month = format(date, "MMM", { locale: ptBR });
   const days = daysDiff(dateStr);
 
-  const dist = formatDaysDistance(days);
-  if (days === 0) return `Venc ${month}, ${day} · hoje`;
-  if (days > 0) return `Venc ${month}, ${day} · ${dist}`;
+  const dist = formatDaysDistance(days, dateStr);
   return `Venc ${month}, ${day} · ${dist}`;
 }
 
 export function buildSentLabel(dateStr: string): string {
-  const date = new Date(dateStr + "T00:00:00");
+  const date = partsToLocalDate(parseDateParts(dateStr));
   const dayMonth = format(date, "dd/MM", { locale: ptBR });
   const days = daysDiff(dateStr);
 
-  const dist = formatDaysDistance(days);
-  if (days === 0) return `Enviado dia ${dayMonth} · hoje`;
-  if (days > 0) return `Enviado dia ${dayMonth} · ${dist}`;
+  const dist = formatDaysDistance(days, dateStr);
   return `Enviado dia ${dayMonth} · ${dist}`;
 }
 
@@ -75,7 +160,7 @@ export function parseCardInput(input: string): { code: string; date: string | nu
   if (match) {
     const day = match[1].padStart(2, "0");
     const month = match[2].padStart(2, "0");
-    const year = new Date().getFullYear();
+    const year = getBrasiliaTodayParts().year;
     const code = match[3].trim();
     return { code, date: `${year}-${month}-${day}` };
   }
@@ -160,7 +245,7 @@ export function useKanbanData() {
             statusLabel: c.status_label ?? undefined,
             responsible: c.responsible,
             dueDate: c.due_date,
-            dueLabel: c.due_label ?? "",
+            dueLabel: resolveDueLabel(c.due_date, c.due_label),
             comments: countMap[c.id] || 0,
             attachments: c.attachments,
             tags: c.tags ?? [],
@@ -182,7 +267,7 @@ export function useCreateCards() {
     mutationFn: async (inputs: { raw: string; driveLinks?: string[]; exceptions?: string }[]) => {
       const rows = inputs.map((input, i) => {
         const { code, date } = parseCardInput(input.raw);
-        const dateStr = date || new Date().toISOString().split("T")[0];
+        const dateStr = date || getBrasiliaTodayString();
         const label = date ? buildSentLabel(dateStr) : buildDueLabel(dateStr);
 
         return {
