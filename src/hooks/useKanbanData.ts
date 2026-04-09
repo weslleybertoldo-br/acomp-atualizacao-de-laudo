@@ -2,34 +2,65 @@ import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { KanbanCard, KanbanPhase } from "@/data/kanbanData";
-import { format, formatDistanceToNow, isPast, isToday } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+/** Get current date in Brasília timezone (UTC-3) as a Date at midnight UTC */
+function getBrasiliaToday(): Date {
+  const now = new Date();
+  // Brasília is UTC-3
+  const brasiliaOffset = -3 * 60; // minutes
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const brasiliaMs = utcMs + brasiliaOffset * 60000;
+  const brasilia = new Date(brasiliaMs);
+  return new Date(Date.UTC(brasilia.getFullYear(), brasilia.getMonth(), brasilia.getDate()));
+}
+
+/** Calculate exact days difference between a date string and today in Brasília */
+function daysDiff(dateStr: string): number {
+  const date = new Date(Date.UTC(
+    parseInt(dateStr.slice(0, 4)),
+    parseInt(dateStr.slice(5, 7)) - 1,
+    parseInt(dateStr.slice(8, 10))
+  ));
+  const today = getBrasiliaToday();
+  return Math.round((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function formatDaysDistance(days: number): string {
+  const absDays = Math.abs(days);
+  if (absDays === 0) return "hoje";
+  if (absDays === 1) return days > 0 ? "há 1 dia" : "em 1 dia";
+  if (absDays < 30) return days > 0 ? `há ${absDays} dias` : `em ${absDays} dias`;
+  const months = Math.floor(absDays / 30);
+  const remainDays = absDays % 30;
+  if (months === 1 && remainDays === 0) return days > 0 ? "há 1 mês" : "em 1 mês";
+  if (months === 1) return days > 0 ? `há 1 mês e ${remainDays} dia${remainDays > 1 ? "s" : ""}` : `em 1 mês e ${remainDays} dia${remainDays > 1 ? "s" : ""}`;
+  if (remainDays === 0) return days > 0 ? `há ${months} meses` : `em ${months} meses`;
+  return days > 0 ? `há ${months} meses e ${remainDays} dia${remainDays > 1 ? "s" : ""}` : `em ${months} meses e ${remainDays} dia${remainDays > 1 ? "s" : ""}`;
+}
 
 export function buildDueLabel(dateStr: string): string {
   const date = new Date(dateStr + "T00:00:00");
   const day = format(date, "dd", { locale: ptBR });
   const month = format(date, "MMM", { locale: ptBR });
+  const days = daysDiff(dateStr);
 
-  if (isToday(date)) return `Venc ${month}, ${day} · hoje`;
-  if (isPast(date)) {
-    const dist = formatDistanceToNow(date, { locale: ptBR });
-    return `Venc ${month}, ${day} · há ${dist}`;
-  }
-  const dist = formatDistanceToNow(date, { locale: ptBR });
-  return `Venc ${month}, ${day} · em ${dist}`;
+  const dist = formatDaysDistance(days);
+  if (days === 0) return `Venc ${month}, ${day} · hoje`;
+  if (days > 0) return `Venc ${month}, ${day} · ${dist}`;
+  return `Venc ${month}, ${day} · ${dist}`;
 }
 
 export function buildSentLabel(dateStr: string): string {
   const date = new Date(dateStr + "T00:00:00");
   const dayMonth = format(date, "dd/MM", { locale: ptBR });
+  const days = daysDiff(dateStr);
 
-  if (isToday(date)) return `Enviado dia ${dayMonth} · hoje`;
-  if (isPast(date)) {
-    const dist = formatDistanceToNow(date, { locale: ptBR });
-    return `Enviado dia ${dayMonth} · há ${dist}`;
-  }
-  const dist = formatDistanceToNow(date, { locale: ptBR });
-  return `Enviado dia ${dayMonth} · em ${dist}`;
+  const dist = formatDaysDistance(days);
+  if (days === 0) return `Enviado dia ${dayMonth} · hoje`;
+  if (days > 0) return `Enviado dia ${dayMonth} · ${dist}`;
+  return `Enviado dia ${dayMonth} · ${dist}`;
 }
 
 /**
