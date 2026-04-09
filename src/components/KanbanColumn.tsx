@@ -23,7 +23,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ phase, onCardClick, selectionMode, selectedCardIds, onToggleCard }: KanbanColumnProps) {
-  const [sortOrder, setSortOrder] = useState<SortOrder>("oldest");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
 
   const sortedCards = [...phase.cards].sort((a, b) => {
     const dateA = new Date(a.createdAt || "").getTime();
