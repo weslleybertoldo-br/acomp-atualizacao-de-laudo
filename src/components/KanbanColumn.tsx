@@ -23,11 +23,11 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ phase, onCardClick, selectionMode, selectedCardIds, onToggleCard }: KanbanColumnProps) {
-  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("oldest");
 
   const sortedCards = [...phase.cards].sort((a, b) => {
-    const dateA = new Date(a.createdAt || "").getTime();
-    const dateB = new Date(b.createdAt || "").getTime();
+    const dateA = new Date(a.dueDate || a.createdAt || "").getTime();
+    const dateB = new Date(b.dueDate || b.createdAt || "").getTime();
     return sortOrder === "oldest" ? dateA - dateB : dateB - dateA;
   });
 
