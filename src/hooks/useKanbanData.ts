@@ -264,7 +264,7 @@ export function useCreateCards() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (inputs: { raw: string; driveLinks?: string[]; exceptions?: string }[]) => {
+    mutationFn: async (inputs: { raw: string; driveLinks?: string[]; exceptions?: string; tags?: string[] }[]) => {
       const rows = inputs.map((input, i) => {
         const { code, date } = parseCardInput(input.raw);
         const dateStr = date || getBrasiliaTodayString();
@@ -280,6 +280,7 @@ export function useCreateCards() {
           sort_order: i,
           drive_links: input.driveLinks ?? [],
           exceptions: input.exceptions ?? "",
+          tags: input.tags ?? [],
         };
       });
 
