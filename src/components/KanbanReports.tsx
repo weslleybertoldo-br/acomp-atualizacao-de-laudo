@@ -56,11 +56,19 @@ export function KanbanReports() {
 
   // Don't auto-select any report on load
 
+  // Parse YYYY-MM-DD como data LOCAL (evita UTC shift -1d em BRT a cada save+load)
+  const parseLocalDate = (iso: string | null | undefined): Date | undefined => {
+    if (!iso) return undefined;
+    const [y, m, d] = iso.split("-").map(Number);
+    if (!y || !m || !d) return undefined;
+    return new Date(y, m - 1, d);
+  };
+
   const loadReport = (report: SavedReport) => {
     setSelectedReportId(report.id);
     setPeriodPreset((report.period_preset || "") as PeriodPreset);
-    setCustomStart(report.custom_start ? new Date(report.custom_start) : undefined);
-    setCustomEnd(report.custom_end ? new Date(report.custom_end) : undefined);
+    setCustomStart(parseLocalDate(report.custom_start));
+    setCustomEnd(parseLocalDate(report.custom_end));
     setSelectedVariable((report.selected_variable || "") as VariableType | "");
     setSelectedValues(report.selected_values ?? []);
     setSelectedPhases(report.selected_phases ?? []);
