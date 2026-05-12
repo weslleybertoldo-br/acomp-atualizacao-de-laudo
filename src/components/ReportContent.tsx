@@ -1,11 +1,12 @@
 import { useMemo } from "react";
-import { useKanbanData, useResponsiblePeople } from "@/hooks/useKanbanData";
+import { useKanbanData, useResponsiblePeople, useCardEvents, type CardEvent, type CardEventType } from "@/hooks/useKanbanData";
 import { format, subDays, startOfDay, endOfDay, isBefore, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
+
 interface ReportContentProps {
   periodPreset: string;
   customStart: string | null;
@@ -14,6 +15,14 @@ interface ReportContentProps {
   selectedValues: string[];
   selectedPhases: number[];
 }
+
+// Mapa variavel -> tipos de evento que respondem por ela quando ha filtro de periodo
+const VARIABLE_EVENT_TYPES: Record<string, CardEventType[]> = {
+  responsavel_atualizacao: ["update_responsible_changed"],
+  responsavel: ["responsible_changed"],
+  tag: ["tag_added"],
+  sapron: ["sapron_marked", "sapron_unmarked"],
+};
 
 export function ReportContent({ periodPreset, customStart, customEnd, selectedVariable, selectedValues, selectedPhases }: ReportContentProps) {
   const { data: phases } = useKanbanData();
@@ -33,11 +42,29 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
     return phases.flatMap(p => p.cards.map(c => ({ ...c, phaseId: p.id, phaseTitle: p.title })));
   }, [phases]);
 
-  // Apply filters cumulatively
-  const filteredCards = useMemo(() => {
-    let cards = allCards;
+  const cardById = useMemo(() => {
+    const map: Record<string, typeof allCards[number]> = {};
+    for (const c of allCards) map[c.id] = c;
+    return map;
+  }, [allCards]);
 
-    // 1. Filter by time period
+  // Filtros ativos
+  const hasVariableFilter = !!selectedVariable;
+  const hasAnyFilter = !!dateRange || selectedPhases.length > 0 || hasVariableFilter;
+
+  // Modo eventos: periodo + variavel selecionados => consulta audit log
+  const useEventsMode = !!dateRange && hasVariableFilter;
+  const eventTypes = useEventsMode ? (VARIABLE_EVENT_TYPES[selectedVariable!] ?? []) : [];
+
+  const { data: events } = useCardEvents({
+    startIso: useEventsMode && dateRange ? dateRange.start.toISOString() : null,
+    endIso: useEventsMode && dateRange ? dateRange.end.toISOString() : null,
+    eventTypes,
+  });
+
+  // Cards filtrados pelo modo "cards atuais" (sem periodo ou sem variavel)
+  const filteredCardsFallback = useMemo(() => {
+    let cards = allCards;
     if (dateRange) {
       cards = cards.filter(card => {
         const dateStr = card.createdAt;
@@ -46,13 +73,9 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
         return !isBefore(d, dateRange.start) && !isAfter(d, dateRange.end);
       });
     }
-
-    // 2. Filter by selected phases
     if (selectedPhases.length > 0) {
       cards = cards.filter(card => selectedPhases.includes(card.phaseId));
     }
-
-    // 3. Filter by selected variable values (only when values are explicitly selected)
     if (selectedVariable && selectedValues.length > 0) {
       cards = cards.filter(card => {
         switch (selectedVariable) {
@@ -72,25 +95,80 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
         }
       });
     }
-
     return cards;
   }, [allCards, dateRange, selectedPhases, selectedVariable, selectedValues]);
 
-  // Show cards when ANY filter is active
-  const hasAnyFilter = !!dateRange || selectedPhases.length > 0 || !!selectedVariable;
-  const hasVariableFilter = !!selectedVariable;
+  const getPersonAvatar = (name: string) => (people ?? []).find(p => p.name === name);
 
-  const getPersonAvatar = (name: string) => {
-    return (people ?? []).find(p => p.name === name);
-  };
+  // Agrupamento do modo EVENTOS: agrupa por valor atribuido no periodo, dedup card por grupo
+  const eventGroups = useMemo<Array<[string, Array<{ id: string; code: string; phaseId: number; phaseTitle: string; eventAt: string }>]>>(() => {
+    if (!useEventsMode || !events) return [];
 
-  // Group data: by variable if selected, otherwise by phase, otherwise flat list
-  const groupedData = useMemo(() => {
+    const map: Record<string, Map<string, { id: string; code: string; phaseId: number; phaseTitle: string; eventAt: string }>> = {};
+
+    for (const ev of events as CardEvent[]) {
+      const card = cardById[ev.card_id];
+      if (!card) continue; // card pode ter sido deletado
+      if (selectedPhases.length > 0 && !selectedPhases.includes(card.phaseId)) continue;
+
+      let key: string | null = null;
+      switch (selectedVariable) {
+        case "responsavel_atualizacao":
+        case "responsavel":
+          // So conta atribuicoes (new_value nao-nulo). Ignora limpezas.
+          if (!ev.new_value) continue;
+          key = ev.new_value;
+          break;
+        case "tag":
+          // tag_added => new_value tem a tag
+          if (!ev.new_value) continue;
+          key = ev.new_value;
+          break;
+        case "sapron":
+          if (ev.event_type === "sapron_marked") key = "Marcado na Sapron";
+          else if (ev.event_type === "sapron_unmarked") key = "Desmarcado da Sapron";
+          break;
+      }
+      if (!key) continue;
+
+      // Filtro de valores selecionados (quando user filtra valores especificos)
+      if (selectedValues.length > 0) {
+        if (selectedVariable === "sapron") {
+          const wantsMarked = selectedValues.includes("sim");
+          const wantsUnmarked = selectedValues.includes("nao");
+          if (ev.event_type === "sapron_marked" && !wantsMarked) continue;
+          if (ev.event_type === "sapron_unmarked" && !wantsUnmarked) continue;
+        } else {
+          if (!selectedValues.includes(key)) continue;
+        }
+      }
+
+      if (!map[key]) map[key] = new Map();
+      // Dedup por card_id, mantem evento mais antigo do periodo (events ja vem desc)
+      if (!map[key].has(card.id)) {
+        map[key].set(card.id, {
+          id: card.id,
+          code: card.code,
+          phaseId: card.phaseId,
+          phaseTitle: card.phaseTitle,
+          eventAt: ev.created_at,
+        });
+      }
+    }
+
+    return Object.entries(map)
+      .map(([k, v]) => [k, Array.from(v.values())] as [string, Array<{ id: string; code: string; phaseId: number; phaseTitle: string; eventAt: string }>])
+      .sort((a, b) => b[1].length - a[1].length);
+  }, [useEventsMode, events, cardById, selectedVariable, selectedValues, selectedPhases]);
+
+  // Agrupamento do modo CARDS (sem periodo ou sem variavel) -> mantem logica antiga
+  const cardGroups = useMemo<Array<[string, typeof filteredCardsFallback]>>(() => {
+    if (useEventsMode) return [];
     if (!hasAnyFilter) return [];
 
     if (hasVariableFilter) {
-      const map: Record<string, typeof filteredCards> = {};
-      for (const card of filteredCards) {
+      const map: Record<string, typeof filteredCardsFallback> = {};
+      for (const card of filteredCardsFallback) {
         let keys: string[] = [];
         switch (selectedVariable) {
           case "responsavel_atualizacao":
@@ -114,10 +192,9 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
       return Object.entries(map).sort((a, b) => b[1].length - a[1].length);
     }
 
-    // Group by phase if phases selected, otherwise flat
     if (selectedPhases.length > 0) {
-      const map: Record<string, typeof filteredCards> = {};
-      for (const card of filteredCards) {
+      const map: Record<string, typeof filteredCardsFallback> = {};
+      for (const card of filteredCardsFallback) {
         const key = card.phaseTitle;
         if (!map[key]) map[key] = [];
         map[key].push(card);
@@ -129,8 +206,8 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
       });
     }
 
-    return [["Todos os cards", filteredCards] as [string, typeof filteredCards]];
-  }, [selectedVariable, selectedValues, filteredCards, hasAnyFilter, hasVariableFilter, selectedPhases]);
+    return [["Todos os cards", filteredCardsFallback]];
+  }, [useEventsMode, hasAnyFilter, hasVariableFilter, filteredCardsFallback, selectedVariable, selectedPhases]);
 
   if (!hasAnyFilter) {
     return (
@@ -141,16 +218,24 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
   }
 
   const showPersonAvatar = selectedVariable === "responsavel_atualizacao" || selectedVariable === "responsavel";
+  const totalCount = useEventsMode
+    ? eventGroups.reduce((acc, [, arr]) => acc + arr.length, 0)
+    : (cardGroups[0]?.[0] === "Todos os cards" ? cardGroups[0][1].length : cardGroups.reduce((acc, [, arr]) => acc + arr.length, 0));
 
   return (
     <div className="space-y-3">
       <div className="text-sm text-muted-foreground">
-        Total: <strong className="text-foreground">{filteredCards.length}</strong> cards
+        Total: <strong className="text-foreground">{totalCount}</strong> {useEventsMode ? "atribuições" : "cards"}
         {dateRange && (
           <>
             {" · "}
             {format(dateRange.start, "dd/MM/yyyy", { locale: ptBR })} — {format(dateRange.end, "dd/MM/yyyy", { locale: ptBR })}
           </>
+        )}
+        {useEventsMode && (
+          <span className="ml-2 inline-flex items-center gap-1 text-[10px] uppercase tracking-wide bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+            por data da atualização
+          </span>
         )}
       </div>
 
@@ -159,19 +244,83 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
           <thead>
             <tr className="bg-muted/50 border-b border-border">
               <th className="text-left px-4 py-2.5 font-semibold text-foreground">Grupo</th>
-              <th className="text-center px-4 py-2.5 font-semibold text-foreground w-24">Cards</th>
+              <th className="text-center px-4 py-2.5 font-semibold text-foreground w-24">{useEventsMode ? "Cards" : "Cards"}</th>
               <th className="text-left px-4 py-2.5 font-semibold text-foreground w-32">Códigos</th>
             </tr>
           </thead>
           <tbody>
-            {groupedData.length === 0 ? (
+            {(useEventsMode ? eventGroups : cardGroups).length === 0 ? (
               <tr>
                 <td colSpan={3} className="text-center py-8 text-muted-foreground">
                   Nenhum dado encontrado.
                 </td>
               </tr>
+            ) : useEventsMode ? (
+              eventGroups.map(([groupName, items]) => {
+                const personData = showPersonAvatar ? getPersonAvatar(groupName) : null;
+                return (
+                  <tr key={groupName} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors group/row">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {personData && (
+                          <Avatar className="h-6 w-6 shrink-0">
+                            {personData.avatar_url ? <AvatarImage src={personData.avatar_url} alt={groupName} /> : null}
+                            <AvatarFallback className="text-[9px] font-bold bg-primary/20 text-primary">
+                              {groupName.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        <span className="font-medium text-foreground">{groupName}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-flex items-center justify-center bg-primary/10 text-primary font-bold rounded-full h-7 min-w-[28px] px-2 text-xs">
+                        {items.length}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <HoverCard openDelay={100} closeDelay={200}>
+                        <HoverCardTrigger asChild>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(items.map(c => c.code).join(", "));
+                              toast.success("Códigos copiados!");
+                            }}
+                            className="flex items-center gap-1 text-xs text-primary font-medium cursor-pointer hover:underline"
+                          >
+                            <Copy className="h-3 w-3" />
+                            CARDs
+                          </button>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-72 p-3 max-h-72 overflow-y-auto" align="start">
+                          <div className="space-y-1.5">
+                            <span className="text-xs font-semibold text-foreground">{items.length} card(s)</span>
+                            {items.map(c => (
+                              <div key={c.id} className="flex items-center justify-between group/card gap-2">
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-xs font-mono text-foreground truncate">{c.code}</span>
+                                  <span className="text-[10px] text-muted-foreground">{format(new Date(c.eventAt), "dd/MM HH:mm", { locale: ptBR })}</span>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(c.code);
+                                    toast.success(`${c.code} copiado!`);
+                                  }}
+                                  className="opacity-0 group-hover/card:opacity-100 text-muted-foreground hover:text-primary transition-opacity"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
-              groupedData.map(([groupName, cards]) => {
+              cardGroups.map(([groupName, cards]) => {
                 const personData = showPersonAvatar ? getPersonAvatar(groupName) : null;
                 return (
                   <tr key={groupName} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors group/row">
