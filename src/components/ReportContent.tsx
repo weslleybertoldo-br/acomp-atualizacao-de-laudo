@@ -33,7 +33,14 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
     if (periodPreset === "hoje") return { start: startOfDay(now), end: endOfDay(now) };
     if (periodPreset === "7dias") return { start: startOfDay(subDays(now, 7)), end: endOfDay(now) };
     if (periodPreset === "30dias") return { start: startOfDay(subDays(now, 30)), end: endOfDay(now) };
-    if (customStart && customEnd) return { start: startOfDay(new Date(customStart)), end: endOfDay(new Date(customEnd)) };
+    if (customStart && customEnd) {
+      // Parse YYYY-MM-DD como data LOCAL (evita UTC shift que joga 11/05 -> 10/05 em BRT)
+      const parseLocal = (iso: string) => {
+        const [y, m, d] = iso.split("-").map(Number);
+        return new Date(y, m - 1, d);
+      };
+      return { start: startOfDay(parseLocal(customStart)), end: endOfDay(parseLocal(customEnd)) };
+    }
     return null;
   }, [periodPreset, customStart, customEnd]);
 
