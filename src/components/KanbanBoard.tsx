@@ -206,6 +206,7 @@ export function KanbanBoard() {
         card={selectedCard?.card ?? null}
         currentPhaseId={selectedCard?.phaseId ?? 0}
         totalPhases={totalPhases}
+        phaseTitle={phases?.find(p => p.id === selectedCard?.phaseId)?.title}
         onOpenChange={(open) => { if (!open) setSelectedCardInfo(null); }}
       />
     </div>
