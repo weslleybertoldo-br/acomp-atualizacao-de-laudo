@@ -24,6 +24,7 @@ interface CardDetailDialogProps {
   card: KanbanCard | null;
   currentPhaseId: number;
   totalPhases: number;
+  phaseTitle?: string;
   onOpenChange: (open: boolean) => void;
 }
 
