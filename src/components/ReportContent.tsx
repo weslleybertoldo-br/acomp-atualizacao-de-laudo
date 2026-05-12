@@ -114,19 +114,31 @@ export function ReportContent({ periodPreset, customStart, customEnd, selectedVa
       let key: string | null = null;
       switch (selectedVariable) {
         case "responsavel_atualizacao":
-        case "responsavel":
-          // So conta atribuicoes (new_value nao-nulo). Ignora limpezas.
+          // Atribuicao no periodo + valor AINDA ativo no card (trocou/removeu => some)
           if (!ev.new_value) continue;
+          if (card.updateResponsible !== ev.new_value) continue;
+          key = ev.new_value;
+          break;
+        case "responsavel":
+          if (!ev.new_value) continue;
+          if (card.responsible !== ev.new_value) continue;
           key = ev.new_value;
           break;
         case "tag":
-          // tag_added => new_value tem a tag
+          // Tag adicionada no periodo + ainda presente no card
           if (!ev.new_value) continue;
+          if (!(card.tags ?? []).includes(ev.new_value)) continue;
           key = ev.new_value;
           break;
         case "sapron":
-          if (ev.event_type === "sapron_marked") key = "Marcado na Sapron";
-          else if (ev.event_type === "sapron_unmarked") key = "Desmarcado da Sapron";
+          // Estado atual deve bater com o evento
+          if (ev.event_type === "sapron_marked") {
+            if (!card.sapronAdded) continue;
+            key = "Marcado na Sapron";
+          } else if (ev.event_type === "sapron_unmarked") {
+            if (card.sapronAdded) continue;
+            key = "Desmarcado da Sapron";
+          }
           break;
       }
       if (!key) continue;
