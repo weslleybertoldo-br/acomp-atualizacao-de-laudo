@@ -144,6 +144,11 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle
   return (
     <Dialog open={!!card} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto overflow-x-hidden">
+        {phaseTitle && (
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-primary -mb-1">
+            {phaseTitle}
+          </div>
+        )}
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             {editingCode ? (
