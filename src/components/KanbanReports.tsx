@@ -15,6 +15,7 @@ type PeriodPreset = "hoje" | "7dias" | "30dias" | "custom" | "";
 type VariableType = "responsavel_atualizacao" | "responsavel" | "tag" | "sapron";
 
 const PERIOD_OPTIONS: { value: PeriodPreset; label: string }[] = [
+  { value: "", label: "Todas as datas" },
   { value: "hoje", label: "Hoje" },
   { value: "7dias", label: "Últimos 7 dias" },
   { value: "30dias", label: "Últimos 30 dias" },
