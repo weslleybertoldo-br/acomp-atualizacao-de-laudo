@@ -67,7 +67,6 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle
       {
         onSuccess: () => {
           toast.success(`Card ${card.code} movido para a próxima fase!`);
-          onOpenChange(false);
         },
         onError: () => toast.error("Erro ao mover card."),
       }
@@ -80,7 +79,6 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle
       {
         onSuccess: () => {
           toast.success(`Card ${card.code} retornado para a fase anterior!`);
-          onOpenChange(false);
         },
         onError: () => toast.error("Erro ao mover card."),
       }
