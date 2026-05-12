@@ -33,7 +33,7 @@ const TAG_COLORS = [
   "#ec4899", "#06b6d4", "#f97316", "#6366f1", "#14b8a6",
 ];
 
-export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChange }: CardDetailDialogProps) {
+export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle, onOpenChange }: CardDetailDialogProps) {
   const [commentText, setCommentText] = useState("");
   const [editingCode, setEditingCode] = useState(false);
   const [codeText, setCodeText] = useState("");
