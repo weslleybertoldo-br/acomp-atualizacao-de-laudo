@@ -15,6 +15,7 @@ type PeriodPreset = "hoje" | "7dias" | "30dias" | "custom" | "";
 type VariableType = "responsavel_atualizacao" | "responsavel" | "tag" | "sapron";
 
 const PERIOD_OPTIONS: { value: PeriodPreset; label: string }[] = [
+  { value: "", label: "Todas as datas" },
   { value: "hoje", label: "Hoje" },
   { value: "7dias", label: "Últimos 7 dias" },
   { value: "30dias", label: "Últimos 30 dias" },
@@ -241,7 +242,7 @@ export function KanbanReports() {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 text-xs w-44 justify-between">
-                      {periodPreset ? PERIOD_OPTIONS.find(p => p.value === periodPreset)?.label ?? "Selecionar" : "Selecionar período"}
+                      {periodPreset !== "" ? PERIOD_OPTIONS.find(p => p.value === periodPreset)?.label ?? "Selecionar" : "Todas as datas"}
                       <ChevronDown className="h-3 w-3 ml-1" />
                     </Button>
                   </PopoverTrigger>

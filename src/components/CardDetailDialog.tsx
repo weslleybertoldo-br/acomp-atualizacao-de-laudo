@@ -24,6 +24,7 @@ interface CardDetailDialogProps {
   card: KanbanCard | null;
   currentPhaseId: number;
   totalPhases: number;
+  phaseTitle?: string;
   onOpenChange: (open: boolean) => void;
 }
 
@@ -32,7 +33,7 @@ const TAG_COLORS = [
   "#ec4899", "#06b6d4", "#f97316", "#6366f1", "#14b8a6",
 ];
 
-export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChange }: CardDetailDialogProps) {
+export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle, onOpenChange }: CardDetailDialogProps) {
   const [commentText, setCommentText] = useState("");
   const [editingCode, setEditingCode] = useState(false);
   const [codeText, setCodeText] = useState("");
@@ -66,7 +67,6 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
       {
         onSuccess: () => {
           toast.success(`Card ${card.code} movido para a próxima fase!`);
-          onOpenChange(false);
         },
         onError: () => toast.error("Erro ao mover card."),
       }
@@ -79,7 +79,6 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
       {
         onSuccess: () => {
           toast.success(`Card ${card.code} retornado para a fase anterior!`);
-          onOpenChange(false);
         },
         onError: () => toast.error("Erro ao mover card."),
       }
@@ -145,6 +144,11 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, onOpenChan
   return (
     <Dialog open={!!card} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto overflow-x-hidden">
+        {phaseTitle && (
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-primary -mb-1">
+            {phaseTitle}
+          </div>
+        )}
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             {editingCode ? (
