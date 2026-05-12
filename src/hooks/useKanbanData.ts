@@ -177,6 +177,7 @@ export function useKanbanRealtime() {
       .channel("kanban-realtime")
       .on("postgres_changes", { event: "*", schema: "public", table: "kanban_cards" }, () => {
         queryClient.invalidateQueries({ queryKey: ["kanban"] });
+        queryClient.invalidateQueries({ queryKey: ["card-events"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "card_comments" }, (payload) => {
         const cardId = (payload.new as any)?.card_id || (payload.old as any)?.card_id;
@@ -428,6 +429,45 @@ export function useDeleteComment() {
       queryClient.invalidateQueries({ queryKey: ["card-comments", variables.cardId] });
       queryClient.invalidateQueries({ queryKey: ["kanban"] });
     },
+  });
+}
+
+export type CardEventType =
+  | "update_responsible_changed"
+  | "responsible_changed"
+  | "tag_added"
+  | "tag_removed"
+  | "sapron_marked"
+  | "sapron_unmarked";
+
+export interface CardEvent {
+  id: string;
+  card_id: string;
+  event_type: CardEventType;
+  old_value: string | null;
+  new_value: string | null;
+  created_at: string;
+}
+
+/** Busca eventos de auditoria em kanban_card_events filtrados por periodo e tipo. */
+export function useCardEvents(params: {
+  startIso: string | null;
+  endIso: string | null;
+  eventTypes: CardEventType[];
+}) {
+  const { startIso, endIso, eventTypes } = params;
+  return useQuery({
+    queryKey: ["card-events", startIso, endIso, eventTypes],
+    queryFn: async (): Promise<CardEvent[]> => {
+      let query = (supabase.from as any)("kanban_card_events").select("*");
+      if (startIso) query = query.gte("created_at", startIso);
+      if (endIso) query = query.lte("created_at", endIso);
+      if (eventTypes.length > 0) query = query.in("event_type", eventTypes);
+      const { data, error } = await query.order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as CardEvent[];
+    },
+    enabled: !!startIso && !!endIso && eventTypes.length > 0,
   });
 }
 
