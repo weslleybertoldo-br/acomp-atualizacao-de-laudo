@@ -38,6 +38,8 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle
   const [editingCode, setEditingCode] = useState(false);
   const [codeText, setCodeText] = useState("");
   const [newPersonName, setNewPersonName] = useState("");
+  const [responsibleOpen, setResponsibleOpen] = useState(false);
+  const [updateResponsibleOpen, setUpdateResponsibleOpen] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0]);
   const [newDriveLink, setNewDriveLink] = useState("");
@@ -304,7 +306,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <span className="text-muted-foreground text-xs uppercase tracking-wide">Responsável</span>
-              <Popover>
+              <Popover open={responsibleOpen} onOpenChange={setResponsibleOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="mt-0.5 h-8 text-xs justify-start w-full">
                     {card.responsible ? (() => {
@@ -357,6 +359,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle
                     {card.responsible && (
                       <button
                         onClick={() => {
+                          setResponsibleOpen(false);
                           updateCard.mutate(
                             { cardId: card.id, updates: { responsible: "" } },
                             { onSuccess: () => toast.success("Responsável removido!") }
@@ -372,6 +375,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle
                         <div key={p.id} className="flex items-center justify-between group">
                           <button
                             onClick={() => {
+                              setResponsibleOpen(false);
                               updateCard.mutate(
                                 { cardId: card.id, updates: { responsible: p.name } },
                                 { onSuccess: () => toast.success("Responsável atualizado!") }
@@ -472,7 +476,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle
             <span className="text-muted-foreground text-xs uppercase tracking-wide font-semibold">
               Responsável pela atualização de laudo
             </span>
-            <Popover>
+            <Popover open={updateResponsibleOpen} onOpenChange={setUpdateResponsibleOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 text-xs justify-start w-full">
                   {card.updateResponsible ? (() => {
@@ -525,6 +529,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle
                   {card.updateResponsible && (
                     <button
                       onClick={() => {
+                        setUpdateResponsibleOpen(false);
                         updateCard.mutate(
                           { cardId: card.id, updates: { update_responsible: "" } },
                           { onSuccess: () => toast.success("Responsável removido!") }
@@ -540,6 +545,7 @@ export function CardDetailDialog({ card, currentPhaseId, totalPhases, phaseTitle
                       <div key={p.id} className="flex items-center justify-between group">
                         <button
                           onClick={() => {
+                            setUpdateResponsibleOpen(false);
                             updateCard.mutate(
                               { cardId: card.id, updates: { update_responsible: p.name } },
                               { onSuccess: () => toast.success("Responsável pela atualização definido!") }
